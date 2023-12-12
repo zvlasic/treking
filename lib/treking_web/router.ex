@@ -17,7 +17,7 @@ defmodule TrekingWeb.Router do
   scope "/", TrekingWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", LiveController
   end
 
   # Other scopes may use custom stacks.
