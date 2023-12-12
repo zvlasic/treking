@@ -32,7 +32,9 @@ defmodule TrekingWeb.LiveController do
         {:ok, static_path(socket, dest)}
       end)
 
-    XlsxReader.open(file)
+    {:ok, package} = XlsxReader.open(file)
+    [sheet_name] = XlsxReader.sheet_names(package)
+    {:ok, rows} = XlsxReader.sheet(package, sheet_name)
 
     {:noreply, socket}
   end
