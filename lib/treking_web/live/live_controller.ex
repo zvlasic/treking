@@ -18,18 +18,21 @@ defmodule TrekingWeb.LiveController do
   end
 
   def handle_event("save", _params, socket) do
-    consume_uploaded_entries(socket, :results, fn %{path: path}, entry ->
-      dest =
-        Path.join([
-          :code.priv_dir(:treking),
-          "static",
-          "uploads",
-          "#{entry.uuid}-#{entry.client_name}"
-        ])
+    [file] =
+      consume_uploaded_entries(socket, :results, fn %{path: path}, entry ->
+        dest =
+          Path.join([
+            :code.priv_dir(:treking),
+            "static",
+            "uploads",
+            "#{entry.uuid}-#{entry.client_name}"
+          ])
 
-      File.cp!(path, dest)
-      {:ok, static_path(socket, "/uploads/#{Path.basename(dest)}")}
-    end)
+        File.cp!(path, dest)
+        {:ok, static_path(socket, dest)}
+      end)
+
+    XlsxReader.open(file)
 
     {:noreply, socket}
   end
