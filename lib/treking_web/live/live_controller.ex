@@ -11,6 +11,9 @@ defmodule TrekingWeb.LiveController do
      |> assign(:gender_options, [])
      |> assign(:first_name_options, [])
      |> assign(:last_name_options, [])
+     |> assign(:birth_year_options, [])
+     |> assign(:fin_options, [])
+     |> assign(:country_options, [])
      |> assign(:delete_column_options, [])}
   end
 
@@ -48,6 +51,15 @@ defmodule TrekingWeb.LiveController do
             value="-1"
           />
           <.input label="Gender" type="select" name="gender" options={@gender_options} value="-1" />
+          <.input label="Country" type="select" name="country" options={@country_options} value="-1" />
+          <.input
+            label="Birth year"
+            type="select"
+            name="birth_year"
+            options={@birth_year_options}
+            value="-1"
+          />
+          <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
         </form>
       </div>
 
@@ -108,6 +120,9 @@ defmodule TrekingWeb.LiveController do
     first_name_options = all_columns
     last_name_options = all_columns
     gender_options = all_columns ++ ["M", "F"]
+    birth_year_options = all_columns
+    fin_options = all_columns
+    country_options = all_columns
 
     socket =
       socket
@@ -117,6 +132,9 @@ defmodule TrekingWeb.LiveController do
       |> assign(:last_name_options, last_name_options)
       |> assign(:gender_options, gender_options)
       |> assign(:delete_column_options, delete_column_options)
+      |> assign(:birth_year_options, birth_year_options)
+      |> assign(:fin_options, fin_options)
+      |> assign(:country_options, country_options)
 
     {:noreply, socket}
   end
