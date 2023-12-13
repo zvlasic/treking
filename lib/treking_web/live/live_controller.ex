@@ -27,7 +27,7 @@ defmodule TrekingWeb.LiveController do
     </div>
     <div class="flex h-screen bg-gray-100">
       <div class="w-64 bg-white p-4 shadow-lg flex-shrink-0">
-        <form>
+        <form phx-submit="persist">
           <.input
             label="Delete column"
             type="select"
@@ -60,6 +60,7 @@ defmodule TrekingWeb.LiveController do
             value="-1"
           />
           <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
+          <.button>Persist</.button>
         </form>
       </div>
 
@@ -145,5 +146,39 @@ defmodule TrekingWeb.LiveController do
     delete_column = String.to_integer(delete_column)
     rows = Enum.filter(socket.assigns.rows, &(Enum.at(&1, delete_column) != ""))
     {:noreply, assign(socket, :rows, rows)}
+  end
+
+  def handle_event(
+        "persist",
+        %{
+          "birth_year" => birth_year_column,
+          "country" => country_column,
+          "fin" => fin_column,
+          "first_name" => first_name_column,
+          "gender" => gender_column,
+          "last_name" => last_name_column
+        },
+        socket
+      ) do
+    birth_year_column = String.to_integer(birth_year_column)
+    country_column = String.to_integer(country_column)
+    first_name_column = String.to_integer(first_name_column)
+    gender_column = String.to_integer(gender_column)
+    last_name_column = String.to_integer(last_name_column)
+    fin_column = String.to_integer(fin_column)
+
+    rows = socket.assigns.rows
+
+    Enum.map(rows, fn row ->
+      %{
+        first_name: Enum.at(row, first_name_column),
+        last_name: Enum.at(row, last_name_column),
+        birth_year: Enum.at(row, birth_year_column),
+        gender: Enum.at(row, gender_column),
+        country: Enum.at(row, country_column)
+      }
+    end)
+
+    {:noreply, socket}
   end
 end
