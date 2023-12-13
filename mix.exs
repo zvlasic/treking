@@ -51,7 +51,8 @@ defmodule Treking.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:plug_cowboy, "~> 2.5"},
       {:credo, "~> 1.7"},
-      {:xlsx_reader, "~> 0.8.0"}
+      {:xlsx_reader, "~> 0.8.0"},
+      {:ecto_enum, "~> 1.4"}
     ]
   end
 

@@ -1,6 +1,9 @@
 defmodule Treking.Schemas.Result do
   use Ecto.Schema
   import Ecto.Changeset
+  import EctoEnum
+
+  defenum Gender, :gender, [:m, :f]
 
   schema "results" do
     belongs_to :runner, Treking.Schemas.Runner, foreign_key: :runner_id, type: :id
@@ -9,6 +12,7 @@ defmodule Treking.Schemas.Result do
     field :position, :integer
     field :category, :string
     field :dnf, :boolean, default: false
+    field :gender, Gender
 
     timestamps()
   end
