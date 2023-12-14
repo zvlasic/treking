@@ -11,6 +11,8 @@ config :treking,
   ecto_repos: [Treking.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+config :treking, Treking.Repo, migration_primary_key: [type: :binary_id]
+
 # Configures the endpoint
 config :treking, TrekingWeb.Endpoint,
   url: [host: "localhost"],
