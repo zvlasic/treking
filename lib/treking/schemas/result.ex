@@ -3,6 +3,9 @@ defmodule Treking.Schemas.Result do
   import Ecto.Changeset
   import EctoEnum
 
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+
   defenum Gender, :gender, [:m, :f]
 
   schema "results" do
