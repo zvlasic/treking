@@ -4,6 +4,9 @@ defmodule TrekingWeb.LiveController do
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
 
+    race_options =
+      Treking.get_races() |> Enum.map(&{&1.name, to_string(&1.id)}) |> Keyword.to_list()
+
     {:ok,
      socket
      |> assign(:col, [])
@@ -14,7 +17,8 @@ defmodule TrekingWeb.LiveController do
      |> assign(:birth_year_options, [])
      |> assign(:fin_options, [])
      |> assign(:country_options, [])
-     |> assign(:delete_column_options, [])}
+     |> assign(:delete_column_options, [])
+     |> assign(:race_options, race_options)}
   end
 
   def render(assigns) do
@@ -60,6 +64,7 @@ defmodule TrekingWeb.LiveController do
             value="-1"
           />
           <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
+          <.input label="Race" type="select" name="race" options={@race_options} value={nil} />
           <.button>Persist</.button>
         </form>
       </div>
