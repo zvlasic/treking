@@ -1,6 +1,11 @@
 defmodule TrekingWeb.LiveController do
   use TrekingWeb, :live_view
 
+  import Ecto.Query
+
+  alias Treking.Repo
+  alias Treking.Schemas.{Runner, Result}
+
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
 
@@ -18,6 +23,7 @@ defmodule TrekingWeb.LiveController do
        fin_options: [],
        country_options: [],
        delete_column_options: [],
+       position_options: [],
        race_options: race_options
      )}
   end
@@ -65,6 +71,13 @@ defmodule TrekingWeb.LiveController do
             value="-1"
           />
           <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
+          <.input
+            label="Position"
+            type="select"
+            name="position"
+            options={@position_options}
+            value="-1"
+          />
           <.input label="Race" type="select" name="race" options={@race_options} value={nil} />
           <.input
             label="Category"
@@ -128,7 +141,7 @@ defmodule TrekingWeb.LiveController do
     {:ok, [col | rows]} = XlsxReader.sheet(package, sheet_name)
 
     column_size = Enum.count(col)
-    all_column_options = Enum.map(-1..column_size, & &1)
+    all_column_options = Enum.map(-1..(column_size - 1), & &1)
 
     socket =
       assign(socket,
@@ -140,7 +153,8 @@ defmodule TrekingWeb.LiveController do
         delete_column_options: all_column_options,
         birth_year_options: all_column_options,
         fin_options: all_column_options,
-        country_options: all_column_options
+        country_options: all_column_options,
+        position_options: all_column_options
       )
 
     {:noreply, socket}
@@ -164,6 +178,7 @@ defmodule TrekingWeb.LiveController do
           "gender" => gender_column,
           "last_name" => last_name_column,
           "race" => race_id,
+          "position" => position_column,
           "category" => category
         },
         socket
@@ -174,19 +189,95 @@ defmodule TrekingWeb.LiveController do
     gender_column = String.to_integer(gender_column)
     last_name_column = String.to_integer(last_name_column)
     fin_column = String.to_integer(fin_column)
+    position_column = String.to_integer(position_column)
 
     rows = socket.assigns.rows
 
-    Enum.map(rows, fn row ->
+    rows
+    |> Enum.map(fn row ->
       %{
-        first_name: Enum.at(row, first_name_column),
-        last_name: Enum.at(row, last_name_column),
-        birth_year: Enum.at(row, birth_year_column),
-        gender: Enum.at(row, gender_column),
-        country: Enum.at(row, country_column)
+        first_name: Enum.at(row, first_name_column) |> String.trim() |> String.upcase(),
+        last_name: Enum.at(row, last_name_column) |> String.trim() |> String.upcase(),
+        birth_year: parse_birth_year(Enum.at(row, birth_year_column)),
+        gender: parse_gender(Enum.at(row, gender_column)),
+        position: parse_birth_year(Enum.at(row, position_column)),
+        country: Enum.at(row, country_column),
+        dnf: parse_dnf(Enum.at(row, fin_column)),
+        race_id: race_id,
+        category: category
       }
     end)
+    |> insert()
 
     {:noreply, socket}
   end
+
+  defp insert(data) do
+    Enum.reduce_while(data, [], fn row, acc ->
+      with {:ok, runner} <- fetch_or_insert_runner(row),
+           {:ok, result} <- insert_result(runner, row) do
+        {:cont, [result | acc]}
+      else
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  defp fetch_or_insert_runner(data) do
+    query =
+      from(r in Runner,
+        where: r.first_name == ^data.first_name,
+        where: r.last_name == ^data.last_name,
+        where: r.gender == ^data.gender,
+        select: r
+      )
+      |> filter_by_birth_year(data.birth_year)
+      |> filter_by_country(data.country)
+
+    case Repo.one(query) do
+      nil -> insert_runner(data)
+      runner -> {:ok, runner}
+    end
+  end
+
+  defp insert_runner(data), do: %Runner{} |> Runner.changeset(data) |> Repo.insert()
+
+  defp insert_result(runner, data),
+    do: %Result{} |> Result.changeset(Map.put(data, :runner_id, runner.id)) |> Repo.insert()
+
+  defp filter_by_birth_year(query, nil), do: query
+  defp filter_by_birth_year(query, birth_year), do: where(query, [r], r.birth_year == ^birth_year)
+  defp filter_by_country(query, nil), do: query
+  defp filter_by_country(query, country), do: where(query, [r], r.country == ^country)
+
+  defp transact(fun, opts \\ []) do
+    Treking.Repo.transaction(
+      Function.info(fun, :arity)
+      |> case do
+        {:arity, 0} -> fun.()
+        {:arity, 1} -> fun.(Treking.Repo)
+      end
+      |> case do
+        {:ok, result} -> result
+        {:error, reason} -> Treking.Repo.rollback(reason)
+      end,
+      opts
+    )
+  end
+
+  defp parse_gender("Muški"), do: :m
+  defp parse_gender("M"), do: :m
+  defp parse_gender("Ženski"), do: :f
+  defp parse_gender("Ž"), do: :f
+  defp parse_gender("F"), do: :f
+
+  defp parse_birth_year(nil), do: nil
+  defp parse_birth_year(""), do: nil
+  defp parse_birth_year(value) when is_binary(value), do: String.to_integer(value)
+  defp parse_birth_year(value) when is_float(value), do: trunc(value)
+  defp parse_birth_year(value) when is_integer(value), do: value
+
+  defp parse_dnf(nil), do: false
+  defp parse_dnf("FIN"), do: false
+  defp parse_dnf("DNF"), do: true
 end
