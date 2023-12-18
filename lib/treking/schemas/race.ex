@@ -1,9 +1,5 @@
 defmodule Treking.Schemas.Race do
-  use Ecto.Schema
-  import Ecto.Changeset
-
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  use Treking.Schemas.Base
 
   schema "races" do
     field :name, :string
@@ -13,9 +9,6 @@ defmodule Treking.Schemas.Race do
   end
 
   @doc false
-  def changeset(race, attrs) do
-    race
-    |> cast(attrs, [:name, :date])
-    |> validate_required([:name, :date])
-  end
+  def changeset(race, attrs),
+    do: race |> cast(attrs, [:name, :date]) |> validate_required([:name, :date])
 end

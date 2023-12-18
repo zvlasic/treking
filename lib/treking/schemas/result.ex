@@ -1,10 +1,5 @@
 defmodule Treking.Schemas.Result do
-  use Ecto.Schema
-  import Ecto.Changeset
-  import EctoEnum
-
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  use Treking.Schemas.Base
 
   defenum Gender, :gender, [:m, :f]
   defenum Category, :category, [:active, :challenger, :marathon, :ultra]
