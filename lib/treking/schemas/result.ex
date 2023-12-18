@@ -7,13 +7,14 @@ defmodule Treking.Schemas.Result do
   @foreign_key_type :binary_id
 
   defenum Gender, :gender, [:m, :f]
+  defenum Category, :category, [:active, :challenger, :marathon, :ultra]
 
   schema "results" do
     belongs_to :runner, Treking.Schemas.Runner, foreign_key: :runner_id, type: :id
     belongs_to :race, Treking.Schemas.Race, foreign_key: :race_id, type: :id
 
     field :position, :integer
-    field :category, :string
+    field :category, Category
     field :dnf, :boolean, default: false
     field :gender, Gender
 
