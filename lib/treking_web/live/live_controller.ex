@@ -65,6 +65,13 @@ defmodule TrekingWeb.LiveController do
           />
           <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
           <.input label="Race" type="select" name="race" options={@race_options} value={nil} />
+          <.input
+            label="Category"
+            type="select"
+            name="category"
+            options={Treking.Schemas.Result.Category.__enums__()}
+            value={nil}
+          />
           <.button>Persist</.button>
         </form>
       </div>
@@ -161,7 +168,9 @@ defmodule TrekingWeb.LiveController do
           "fin" => fin_column,
           "first_name" => first_name_column,
           "gender" => gender_column,
-          "last_name" => last_name_column
+          "last_name" => last_name_column,
+          "race" => race_id,
+          "category" => category
         },
         socket
       ) do
