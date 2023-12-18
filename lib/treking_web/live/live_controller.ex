@@ -8,17 +8,18 @@ defmodule TrekingWeb.LiveController do
       Treking.get_races() |> Enum.map(&{&1.name, to_string(&1.id)}) |> Keyword.to_list()
 
     {:ok,
-     socket
-     |> assign(:col, [])
-     |> assign(:rows, [])
-     |> assign(:gender_options, [])
-     |> assign(:first_name_options, [])
-     |> assign(:last_name_options, [])
-     |> assign(:birth_year_options, [])
-     |> assign(:fin_options, [])
-     |> assign(:country_options, [])
-     |> assign(:delete_column_options, [])
-     |> assign(:race_options, race_options)}
+     assign(socket,
+       col: [],
+       rows: [],
+       gender_options: [],
+       first_name_options: [],
+       last_name_options: [],
+       birth_year_options: [],
+       fin_options: [],
+       country_options: [],
+       delete_column_options: [],
+       race_options: race_options
+     )}
   end
 
   def render(assigns) do
@@ -127,27 +128,20 @@ defmodule TrekingWeb.LiveController do
     {:ok, [col | rows]} = XlsxReader.sheet(package, sheet_name)
 
     column_size = Enum.count(col)
-    all_columns = Enum.map(-1..column_size, & &1)
-
-    delete_column_options = all_columns
-    first_name_options = all_columns
-    last_name_options = all_columns
-    gender_options = all_columns ++ ["M", "F"]
-    birth_year_options = all_columns
-    fin_options = all_columns
-    country_options = all_columns
+    all_column_options = Enum.map(-1..column_size, & &1)
 
     socket =
-      socket
-      |> assign(:col, col)
-      |> assign(:rows, rows)
-      |> assign(:first_name_options, first_name_options)
-      |> assign(:last_name_options, last_name_options)
-      |> assign(:gender_options, gender_options)
-      |> assign(:delete_column_options, delete_column_options)
-      |> assign(:birth_year_options, birth_year_options)
-      |> assign(:fin_options, fin_options)
-      |> assign(:country_options, country_options)
+      assign(socket,
+        col: col,
+        rows: rows,
+        first_name_options: all_column_options,
+        last_name_options: all_column_options,
+        gender_options: all_column_options ++ ["M", "F"],
+        delete_column_options: all_column_options,
+        birth_year_options: all_column_options,
+        fin_options: all_column_options,
+        country_options: all_column_options
+      )
 
     {:noreply, socket}
   end
