@@ -17,6 +17,10 @@ defmodule Treking.Schemas.Result do
   end
 
   @doc false
-  def changeset(result, attrs),
-    do: result |> cast(attrs, @attributes) |> validate_required(@mandatory)
+  def changeset(result, attrs) do
+    result
+    |> cast(attrs, @attributes)
+    |> unique_constraint(:race_id, name: "results_runner_id_race_id_index")
+    |> validate_required(@mandatory)
+  end
 end

@@ -213,12 +213,20 @@ defmodule TrekingWeb.LiveController do
   end
 
   defp insert(data) do
-    Enum.reduce_while(data, [], fn row, acc ->
-      with {:ok, runner} <- fetch_or_insert_runner(row),
-           {:ok, result} <- insert_result(runner, row) do
-        {:cont, [result | acc]}
-      else
-        {:error, reason} -> {:halt, {:error, reason}}
+    Repo.transaction(fn ->
+      response =
+        Enum.reduce_while(data, [], fn row, acc ->
+          with {:ok, runner} <- fetch_or_insert_runner(row),
+               {:ok, result} <- insert_result(runner, row) do
+            {:cont, [result | acc]}
+          else
+            {:error, reason} -> {:halt, {:error, reason}}
+          end
+        end)
+
+      case response do
+        {:error, reason} -> Repo.rollback(reason)
+        results -> {:ok, results}
       end
     end)
   end
@@ -249,21 +257,6 @@ defmodule TrekingWeb.LiveController do
   defp filter_by_birth_year(query, birth_year), do: where(query, [r], r.birth_year == ^birth_year)
   defp filter_by_country(query, nil), do: query
   defp filter_by_country(query, country), do: where(query, [r], r.country == ^country)
-
-  defp transact(fun, opts \\ []) do
-    Treking.Repo.transaction(
-      Function.info(fun, :arity)
-      |> case do
-        {:arity, 0} -> fun.()
-        {:arity, 1} -> fun.(Treking.Repo)
-      end
-      |> case do
-        {:ok, result} -> result
-        {:error, reason} -> Treking.Repo.rollback(reason)
-      end,
-      opts
-    )
-  end
 
   defp parse_gender("Muški"), do: :m
   defp parse_gender("M"), do: :m
