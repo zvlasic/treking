@@ -10,6 +10,8 @@ defmodule Treking.Schemas.Runner do
     field :country, :string
     field :gender, Gender
 
+    has_many :results, Treking.Schemas.Result
+
     timestamps()
   end
 

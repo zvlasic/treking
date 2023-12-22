@@ -2,14 +2,15 @@ defmodule Treking.Schemas.Result do
   use Treking.Schemas.Base
 
   defenum Category, :category, [:active, :challenger, :marathon, :ultra]
-  @attributes [:runner_id, :race_id, :position, :category, :dnf]
-  @mandatory [:runner_id, :race_id, :category]
+  @attributes [:runner_id, :race_id, :position, :category, :dnf, :points]
+  @mandatory [:runner_id, :race_id, :category, :points]
 
   schema "results" do
     belongs_to :runner, Treking.Schemas.Runner
     belongs_to :race, Treking.Schemas.Race
 
     field :position, :integer
+    field :points, :integer
     field :category, Category
     field :dnf, :boolean, default: false
 
