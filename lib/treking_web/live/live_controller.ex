@@ -325,7 +325,7 @@ defmodule TrekingWeb.LiveController do
 
       case response do
         {:error, reason} -> Repo.rollback(reason)
-        results -> {:ok, results}
+        results -> results
       end
     end)
   end
