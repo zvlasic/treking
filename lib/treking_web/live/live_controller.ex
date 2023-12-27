@@ -4,16 +4,28 @@ defmodule TrekingWeb.LiveController do
   import Ecto.Query
 
   alias Treking.Repo
-  alias Treking.Schemas.{Runner, Result}
+  alias Treking.Schemas.{Result, Runner}
+
+  @male_markers ["Muški", "M"]
+  @female_markers ["Ženski", "Ž", "F"]
+
+  @dnf_markers ["DNF"]
+  @fin_markers ["FIN"]
 
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
 
     race_options =
-      Treking.get_races() |> Enum.map(&{&1.name, to_string(&1.id)}) |> Keyword.to_list()
+      Treking.get_races()
+      |> Enum.map(&{&1.name, to_string(&1.id)})
+      |> Keyword.to_list()
+      |> Kernel.++([{"Select race", nil}])
+
+    category_options = Result.Category.__enums__() ++ [nil]
 
     {:ok,
-     assign(socket,
+     socket
+     |> assign(
        col: [],
        rows: [],
        gender_options: [],
@@ -24,8 +36,10 @@ defmodule TrekingWeb.LiveController do
        country_options: [],
        delete_column_options: [],
        position_options: [],
-       race_options: race_options
-     )}
+       race_options: race_options,
+       category_options: category_options
+     )
+     |> clear_flash()}
   end
 
   def render(assigns) do
@@ -83,7 +97,7 @@ defmodule TrekingWeb.LiveController do
             label="Category"
             type="select"
             name="category"
-            options={Treking.Schemas.Result.Category.__enums__()}
+            options={@category_options}
             value={nil}
           />
           <.button>Persist</.button>
@@ -151,9 +165,9 @@ defmodule TrekingWeb.LiveController do
         last_name_options: all_column_options,
         gender_options: all_column_options ++ ["M", "F"],
         delete_column_options: all_column_options,
-        birth_year_options: all_column_options,
-        fin_options: all_column_options,
-        country_options: all_column_options,
+        birth_year_options: all_column_options ++ ["NO_YEAR"],
+        fin_options: all_column_options ++ ["ALL_FIN"],
+        country_options: all_column_options ++ ["NO_COUNTRY"],
         position_options: all_column_options
       )
 
@@ -191,26 +205,111 @@ defmodule TrekingWeb.LiveController do
     fin_column = String.to_integer(fin_column)
     position_column = String.to_integer(position_column)
 
-    rows = socket.assigns.rows
+    prepared_data =
+      Enum.reduce_while(socket.assigns.rows, {:ok, []}, fn row, {:ok, acc} ->
+        with {:ok, first_name} <- parse_name(row, first_name_column),
+             {:ok, last_name} <- parse_name(row, last_name_column),
+             {:ok, gender} <- parse_gender(row, gender_column),
+             {:ok, birth_year} <- parse_birth_year(row, birth_year_column),
+             {:ok, dnf} <- parse_dnf(row, fin_column),
+             {:ok, position} <- parse_position(row, position_column, dnf),
+             {:ok, country} <- parse_country(row, country_column),
+             {:ok, race_id} <- validate_race_id(race_id),
+             {:ok, category} <- validate_category(category),
+             {:ok, points} <- Treking.fetch_points(position, dnf) do
+          {:cont,
+           {:ok,
+            [
+              %{
+                first_name: first_name,
+                last_name: last_name,
+                gender: gender,
+                birth_year: birth_year,
+                dnf: dnf,
+                position: position,
+                country: country,
+                race_id: race_id,
+                category: category,
+                points: points
+              }
+            ] ++ acc}}
+        else
+          error -> {:halt, error}
+        end
+      end)
 
-    rows
-    |> Enum.map(fn row ->
-      %{
-        first_name: Enum.at(row, first_name_column) |> String.trim() |> String.upcase(),
-        last_name: Enum.at(row, last_name_column) |> String.trim() |> String.upcase(),
-        birth_year: parse_birth_year(Enum.at(row, birth_year_column)),
-        gender: parse_gender(Enum.at(row, gender_column)),
-        position: parse_birth_year(Enum.at(row, position_column)),
-        country: Enum.at(row, country_column),
-        dnf: parse_dnf(Enum.at(row, fin_column)),
-        race_id: race_id,
-        category: category
-      }
-    end)
-    |> insert()
+    with {:ok, prepared_data} <- prepared_data,
+         prepared_data <- Enum.filter(prepared_data, & &1.points),
+         {:ok, inserted_results} <- insert(prepared_data) do
+      {:noreply, put_flash(socket, :info, "Inserted #{length(inserted_results)} results!")}
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, put_flash(socket, :error, inspect(changeset))}
 
-    {:noreply, socket}
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
+    end
   end
+
+  defp parse_name(row, column) do
+    with {:ok, value} <- get_column_value(row, column),
+         :ok <- check_empty(value),
+         do: {:ok, value |> String.trim() |> String.upcase()}
+  end
+
+  defp parse_gender(_, "M"), do: {:ok, :m}
+  defp parse_gender(_, "F"), do: {:ok, :f}
+
+  defp parse_gender(row, column) do
+    with {:ok, value} <- get_column_value(row, column),
+         :ok <- check_empty(value),
+         do: extract_gender(value)
+  end
+
+  defp parse_birth_year(_, "NO_YEAR"), do: {:ok, nil}
+
+  defp parse_birth_year(row, column) do
+    with {:ok, value} <- get_column_value(row, column),
+         do: parse_integer(value)
+  end
+
+  def parse_dnf(_row, "ALL_FIN"), do: {:ok, false}
+
+  def parse_dnf(row, column) do
+    with {:ok, value} <- get_column_value(row, column),
+         :ok <- check_empty(value),
+         do: extract_dnf(value)
+  end
+
+  defp parse_position(_, _, true), do: {:ok, nil}
+
+  defp parse_position(row, column, _) do
+    with {:ok, value} <- get_column_value(row, column),
+         do: parse_integer(value)
+  end
+
+  defp parse_country(_, "NO_COUNTRY"), do: {:ok, nil}
+
+  defp parse_country(row, column) do
+    with {:ok, value} <- get_column_value(row, column),
+         :ok <- check_empty(value),
+         do: Treking.fetch_country(value)
+  end
+
+  defp validate_race_id(nil), do: {:error, "Select race!"}
+  defp validate_race_id(race_id), do: {:ok, race_id}
+
+  defp validate_category(nil), do: {:error, "Select category!"}
+  defp validate_category(category_id), do: {:ok, category_id}
+
+  defp get_column_value(row, column) do
+    if column < 0 || column > Enum.count(row) - 1,
+      do: {:error, "Column out of range"},
+      else: {:ok, Enum.at(row, column)}
+  end
+
+  defp check_empty(value),
+    do: if(String.length(value) > 0, do: :ok, else: {:error, "Empty string"})
 
   defp insert(data) do
     Repo.transaction(fn ->
@@ -258,19 +357,18 @@ defmodule TrekingWeb.LiveController do
   defp filter_by_country(query, nil), do: query
   defp filter_by_country(query, country), do: where(query, [r], r.country == ^country)
 
-  defp parse_gender("Muški"), do: :m
-  defp parse_gender("M"), do: :m
-  defp parse_gender("Ženski"), do: :f
-  defp parse_gender("Ž"), do: :f
-  defp parse_gender("F"), do: :f
+  defp extract_gender(value) when value in @male_markers, do: {:ok, :m}
+  defp extract_gender(value) when value in @female_markers, do: {:ok, :f}
+  defp extract_gender(value), do: {:error, "#{value} not in gender markers"}
 
-  defp parse_birth_year(nil), do: nil
-  defp parse_birth_year(""), do: nil
-  defp parse_birth_year(value) when is_binary(value), do: String.to_integer(value)
-  defp parse_birth_year(value) when is_float(value), do: trunc(value)
-  defp parse_birth_year(value) when is_integer(value), do: value
+  defp parse_integer(nil), do: {:ok, nil}
+  defp parse_integer(""), do: {:ok, nil}
+  defp parse_integer(value) when is_binary(value), do: {:ok, String.to_integer(value)}
+  defp parse_integer(value) when is_float(value), do: {:ok, trunc(value)}
+  defp parse_integer(value) when is_integer(value), do: {:ok, value}
+  defp parse_integer(_), do: {:error, "Invalid integer"}
 
-  defp parse_dnf(nil), do: false
-  defp parse_dnf("FIN"), do: false
-  defp parse_dnf("DNF"), do: true
+  defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
+  defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
+  defp extract_dnf(value), do: {:error, "#{value} not in dnf markers"}
 end
