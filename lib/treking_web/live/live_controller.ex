@@ -136,6 +136,9 @@ defmodule TrekingWeb.LiveController do
     """
   end
 
+  def handle_event("save", _, %{assigns: %{uploads: %{results: %{entries: []}}}} = socket),
+    do: {:noreply, put_flash(socket, :error, "Select a file!")}
+
   def handle_event("save", _params, socket) do
     [file] =
       consume_uploaded_entries(socket, :results, fn %{path: path}, entry ->
@@ -159,7 +162,8 @@ defmodule TrekingWeb.LiveController do
     all_column_options = Enum.map(-1..(column_size - 1), & &1)
 
     socket =
-      assign(socket,
+      socket
+      |> assign(
         col: col,
         rows: rows,
         first_name_options: all_column_options,
@@ -171,6 +175,7 @@ defmodule TrekingWeb.LiveController do
         country_options: all_column_options ++ ["NO_COUNTRY"],
         position_options: all_column_options
       )
+      |> clear_flash()
 
     File.rm(file)
 
