@@ -19,7 +19,7 @@ defmodule TrekingWeb.LiveController do
       Treking.get_races()
       |> Enum.map(&{&1.name, to_string(&1.id)})
       |> Keyword.to_list()
-      |> Kernel.++([{"Select race", nil}])
+      |> Kernel.++([{"Select race", ""}])
 
     category_options = Result.Category.__enums__() ++ [""]
 
@@ -92,7 +92,7 @@ defmodule TrekingWeb.LiveController do
             options={@position_options}
             value="-1"
           />
-          <.input label="Race" type="select" name="race" options={@race_options} value={nil} />
+          <.input label="Race" type="select" name="race" options={@race_options} value="" />
           <.input
             label="Category"
             type="select"
@@ -298,7 +298,7 @@ defmodule TrekingWeb.LiveController do
          do: Treking.fetch_country(value)
   end
 
-  defp validate_race_id(nil), do: {:error, "Select race!"}
+  defp validate_race_id(""), do: {:error, "Select race!"}
   defp validate_race_id(race_id), do: {:ok, race_id}
 
   defp validate_category(""), do: {:error, "Select category!"}
