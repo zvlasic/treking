@@ -28,6 +28,7 @@ defmodule TrekingWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import TrekingWeb.ConnCase
+      import Phoenix.LiveViewTest
     end
   end
 

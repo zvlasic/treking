@@ -94,6 +94,7 @@ defmodule TrekingWeb.LiveController do
           />
           <.input label="Race" type="select" name="race" options={@race_options} value="" />
           <.input
+            id="category"
             label="Category"
             type="select"
             name="category"
