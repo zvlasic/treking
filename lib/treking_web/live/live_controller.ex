@@ -21,7 +21,7 @@ defmodule TrekingWeb.LiveController do
       |> Keyword.to_list()
       |> Kernel.++([{"Select race", nil}])
 
-    category_options = Result.Category.__enums__() ++ [nil]
+    category_options = Result.Category.__enums__() ++ [""]
 
     {:ok,
      socket
@@ -98,7 +98,7 @@ defmodule TrekingWeb.LiveController do
             type="select"
             name="category"
             options={@category_options}
-            value={nil}
+            value=""
           />
           <.button>Persist</.button>
         </form>
@@ -301,7 +301,7 @@ defmodule TrekingWeb.LiveController do
   defp validate_race_id(nil), do: {:error, "Select race!"}
   defp validate_race_id(race_id), do: {:ok, race_id}
 
-  defp validate_category(nil), do: {:error, "Select category!"}
+  defp validate_category(""), do: {:error, "Select category!"}
   defp validate_category(category_id), do: {:ok, category_id}
 
   defp get_column_value(row, column) do
