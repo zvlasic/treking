@@ -171,6 +171,8 @@ defmodule TrekingWeb.LiveController do
         position_options: all_column_options
       )
 
+    File.rm(file)
+
     {:noreply, socket}
   end
 
