@@ -214,7 +214,8 @@ defmodule TrekingWeb.LiveController do
     position_column = parse_column_value(position_column)
 
     prepared_data =
-      Enum.reduce_while(socket.assigns.rows, {:ok, []}, fn row, {:ok, acc} ->
+      socket.assigns.rows
+      |> Enum.reduce_while([], fn row, acc ->
         with {:ok, first_name} <- parse_name(row, first_name_column),
              {:ok, last_name} <- parse_name(row, last_name_column),
              {:ok, gender} <- parse_gender(row, gender_column),
@@ -225,25 +226,29 @@ defmodule TrekingWeb.LiveController do
              {:ok, race_id} <- validate_race_id(race_id),
              {:ok, category} <- validate_category(category) do
           {:cont,
-           {:ok,
-            [
-              %{
-                first_name: first_name,
-                last_name: last_name,
-                gender: gender,
-                birth_year: birth_year,
-                dnf: dnf,
-                position: position,
-                country: country,
-                race_id: race_id,
-                category: category,
-                points: Treking.get_points(position, dnf)
-              }
-            ] ++ acc}}
+           [
+             %{
+               first_name: first_name,
+               last_name: last_name,
+               gender: gender,
+               birth_year: birth_year,
+               dnf: dnf,
+               position: position,
+               country: country,
+               race_id: race_id,
+               category: category,
+               points: Treking.get_points(position, dnf)
+             }
+             | acc
+           ]}
         else
           error -> {:halt, error}
         end
       end)
+      |> case do
+        {:error, _} = error -> error
+        response -> {:ok, response}
+      end
 
     with {:ok, prepared_data} <- prepared_data,
          {:ok, inserted_results} <- insert(prepared_data) do
