@@ -205,13 +205,13 @@ defmodule TrekingWeb.LiveController do
         },
         socket
       ) do
-    birth_year_column = String.to_integer(birth_year_column)
-    country_column = String.to_integer(country_column)
-    first_name_column = String.to_integer(first_name_column)
-    gender_column = String.to_integer(gender_column)
-    last_name_column = String.to_integer(last_name_column)
-    fin_column = String.to_integer(fin_column)
-    position_column = String.to_integer(position_column)
+    birth_year_column = parse_column_value(birth_year_column)
+    country_column = parse_column_value(country_column)
+    first_name_column = parse_column_value(first_name_column)
+    gender_column = parse_column_value(gender_column)
+    last_name_column = parse_column_value(last_name_column)
+    fin_column = parse_column_value(fin_column)
+    position_column = parse_column_value(position_column)
 
     prepared_data =
       Enum.reduce_while(socket.assigns.rows, {:ok, []}, fn row, {:ok, acc} ->
@@ -256,6 +256,13 @@ defmodule TrekingWeb.LiveController do
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, reason)}
+    end
+  end
+
+  defp parse_column_value(column) do
+    case Integer.parse(column) do
+      :error -> column
+      {value, _} -> value
     end
   end
 
