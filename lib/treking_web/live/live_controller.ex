@@ -223,8 +223,7 @@ defmodule TrekingWeb.LiveController do
              {:ok, position} <- parse_position(row, position_column, dnf),
              {:ok, country} <- parse_country(row, country_column),
              {:ok, race_id} <- validate_race_id(race_id),
-             {:ok, category} <- validate_category(category),
-             {:ok, points} <- Treking.fetch_points(position, dnf) do
+             {:ok, category} <- validate_category(category) do
           {:cont,
            {:ok,
             [
@@ -238,7 +237,7 @@ defmodule TrekingWeb.LiveController do
                 country: country,
                 race_id: race_id,
                 category: category,
-                points: points
+                points: Treking.get_points(position, dnf)
               }
             ] ++ acc}}
         else
@@ -247,7 +246,6 @@ defmodule TrekingWeb.LiveController do
       end)
 
     with {:ok, prepared_data} <- prepared_data,
-         prepared_data <- Enum.filter(prepared_data, & &1.points),
          {:ok, inserted_results} <- insert(prepared_data) do
       {:noreply, put_flash(socket, :info, "Inserted #{length(inserted_results)} results!")}
     else

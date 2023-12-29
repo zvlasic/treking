@@ -70,13 +70,13 @@ defmodule Treking.TrekingTest do
     end
   end
 
-  defp insert_result(runner, race, position, category) do
+  defp insert_result(runner, race, position, category, dnf \\ false) do
     Repo.insert!(%Result{
       race_id: race.id,
       runner_id: runner.id,
       position: position,
       category: category,
-      points: Treking.points(position)
+      points: Treking.get_points(position, dnf)
     })
   end
 end
