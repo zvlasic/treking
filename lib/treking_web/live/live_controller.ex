@@ -205,11 +205,11 @@ defmodule TrekingWeb.LiveController do
     prepared_data =
       socket.assigns.rows
       |> Enum.reduce_while([], fn row, acc ->
-        with {:ok, first_name} <- parse_name(row, first_name_column),
+        with {:ok, dnf} <- parse_dnf(row, fin_column),
+             {:ok, first_name} <- parse_name(row, first_name_column),
              {:ok, last_name} <- parse_name(row, last_name_column),
              {:ok, gender} <- parse_gender(row, gender_column),
              {:ok, birth_year} <- parse_birth_year(row, birth_year_column),
-             {:ok, dnf} <- parse_dnf(row, fin_column),
              {:ok, position} <- parse_position(row, position_column, dnf),
              {:ok, country} <- parse_country(row, country_column),
              {:ok, race_id} <- validate_race_id(race_id),
