@@ -11,6 +11,7 @@ defmodule TrekingWeb.LiveController do
 
   @dnf_markers ["DNF"]
   @fin_markers ["FIN"]
+  @dns_markers ["DNS", "REG"]
 
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
@@ -34,7 +35,6 @@ defmodule TrekingWeb.LiveController do
        birth_year_options: [],
        fin_options: [],
        country_options: [],
-       delete_column_options: [],
        position_options: [],
        race_options: race_options,
        category_options: category_options
@@ -53,14 +53,6 @@ defmodule TrekingWeb.LiveController do
     <div class="flex h-screen bg-gray-100">
       <div class="w-64 bg-white p-4 shadow-lg flex-shrink-0">
         <form phx-submit="persist">
-          <.input
-            label="Delete column"
-            type="select"
-            name="delete_column"
-            options={@delete_column_options}
-            value="-1"
-            phx-change="delete_column"
-          />
           <.input
             label="First name"
             type="select"
@@ -169,7 +161,6 @@ defmodule TrekingWeb.LiveController do
         first_name_options: all_column_options,
         last_name_options: all_column_options,
         gender_options: all_column_options ++ ["M", "F"],
-        delete_column_options: all_column_options,
         birth_year_options: all_column_options ++ ["NO_YEAR"],
         fin_options: all_column_options ++ ["ALL_FIN"],
         country_options: all_column_options ++ ["NO_COUNTRY"],
@@ -183,12 +174,6 @@ defmodule TrekingWeb.LiveController do
   end
 
   def handle_event("validate", _params, socket), do: {:noreply, socket}
-
-  def handle_event("delete_column", %{"delete_column" => delete_column}, socket) do
-    delete_column = String.to_integer(delete_column)
-    rows = Enum.filter(socket.assigns.rows, &(Enum.at(&1, delete_column) != ""))
-    {:noreply, assign(socket, :rows, rows)}
-  end
 
   def handle_event(
         "persist",
@@ -242,6 +227,7 @@ defmodule TrekingWeb.LiveController do
              | acc
            ]}
         else
+          {:error, :ignore} -> {:cont, acc}
           error -> {:halt, error}
         end
       end)
@@ -388,5 +374,6 @@ defmodule TrekingWeb.LiveController do
 
   defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
   defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
+  defp extract_dnf(value) when value in @dns_markers, do: {:error, :ignore}
   defp extract_dnf(value), do: {:error, "#{value} not in dnf markers"}
 end
