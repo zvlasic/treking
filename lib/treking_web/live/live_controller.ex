@@ -98,7 +98,11 @@ defmodule TrekingWeb.LiveController do
       </div>
 
       <div class="flex-1 p-10 overflow-auto">
-        <table id="results-table" class="min-w-full border-separate border-spacing-0">
+        <table
+          :if={Enum.any?(@col)}
+          id="results-table"
+          class="min-w-full border-separate border-spacing-0"
+        >
           <thead>
             <tr>
               <%= for i  <- 0..length(@col) - 1 do %>
