@@ -21,6 +21,31 @@ defmodule TrekingWeb.LiveControllerTest do
       assert click_upload(view) =~ "Select a file!"
     end
 
+    test "don't work with selected column value out of range", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+      prepare_upload(view, "test1.xlsx")
+      assert click_upload(view) =~ "Kornélia"
+      race = hd(Repo.all(Treking.Schemas.Race))
+
+      params = %{
+        "birth_year" => "5",
+        "country" => "NO_COUNTRY",
+        "fin" => "ALL_FIN",
+        "first_name" => "8",
+        "gender" => "F",
+        "last_name" => "9",
+        "race" => race.id,
+        "position" => "0",
+        "category" => "challenger"
+      }
+
+      params = Map.put(params, "birth_year", "-1")
+      assert click_insert(view, params) =~ "Column out of range"
+
+      params = Map.put(params, "birth_year", "100")
+      assert click_insert(view, params) =~ "Column out of range"
+    end
+
     test "work (existing file)", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
       prepare_upload(view, "test1.xlsx")
