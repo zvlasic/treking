@@ -268,26 +268,32 @@ defmodule TrekingWeb.LiveController do
   defp parse_gender(_, "M"), do: {:ok, :m}
   defp parse_gender(_, "F"), do: {:ok, :f}
 
-  defp parse_gender(row, column) do
+  defp parse_gender(row, column) when is_integer(column) do
     with {:ok, value} <- get_column_value(row, column),
          :ok <- check_empty(value),
          do: extract_gender(value)
   end
 
+  defp parse_gender(_, _), do: {:error, "Invalid column value for gender"}
+
   defp parse_birth_year(_, "NO_YEAR"), do: {:ok, nil}
 
-  defp parse_birth_year(row, column) do
+  defp parse_birth_year(row, column) when is_integer(column) do
     with {:ok, value} <- get_column_value(row, column),
          do: parse_integer(value)
   end
 
-  def parse_dnf(_row, "ALL_FIN"), do: {:ok, false}
+  defp parse_birth_year(_, _), do: {:error, "Invalid column value for birth year"}
 
-  def parse_dnf(row, column) do
+  defp parse_dnf(_row, "ALL_FIN"), do: {:ok, false}
+
+  defp parse_dnf(row, column) when is_integer(column) do
     with {:ok, value} <- get_column_value(row, column),
          :ok <- check_empty(value),
          do: extract_dnf(value)
   end
+
+  defp parse_dnf(_, _), do: {:error, "Invald column value for dnf"}
 
   defp parse_position(_, _, true), do: {:ok, nil}
 
@@ -298,11 +304,13 @@ defmodule TrekingWeb.LiveController do
 
   defp parse_country(_, "NO_COUNTRY"), do: {:ok, nil}
 
-  defp parse_country(row, column) do
+  defp parse_country(row, column) when is_integer(column) do
     with {:ok, value} <- get_column_value(row, column),
          :ok <- check_empty(value),
          do: Treking.fetch_country(value)
   end
+
+  defp parse_country(_, _), do: {:error, "Invalid column value for country"}
 
   defp validate_race_id(""), do: {:error, "Select race!"}
   defp validate_race_id(race_id), do: {:ok, race_id}
