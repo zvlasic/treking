@@ -3,6 +3,12 @@ defmodule TrekingWeb.LiveControllerTest do
 
   alias Treking.Repo
 
+  alias Elixlsx.{Workbook, Sheet}
+
+  setup do
+    on_exit(fn -> File.rm_rf!(path()) end)
+  end
+
   test "upload without selecting file", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/")
     assert render_click(view, "save") =~ "Select a file!"
@@ -20,8 +26,6 @@ defmodule TrekingWeb.LiveControllerTest do
 
     assert render_click(view, "save") =~ "Kornélia"
 
-    render_click(view, "save")
-
     race = Repo.all(Treking.Schemas.Race) |> hd()
 
     assert render_click(view, "persist", %{
@@ -37,8 +41,45 @@ defmodule TrekingWeb.LiveControllerTest do
            }) =~ "Inserted 1 results!"
   end
 
+  test "generate results input", %{conn: conn} do
+    sheet = %Sheet{
+      name: "Sheet1",
+      rows: [["First Name", "Last Name", "Position"], ["Marko", "Kos", 1], ["Ante", "Gelo", 2]]
+    }
+
+    Workbook.append_sheet(%Workbook{}, sheet)
+    |> Elixlsx.write_to(path("hello.xlsx"))
+
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    results =
+      file_input(view, "#upload-form", :results, [
+        %{name: "hello.xlsx", content: open_file!("hello.xlsx")}
+      ])
+
+    render_upload(results, "hello.xlsx")
+
+    assert render_click(view, "save") =~ "Marko"
+
+    race = Repo.all(Treking.Schemas.Race) |> hd()
+
+    assert render_click(view, "persist", %{
+             "birth_year" => "NO_YEAR",
+             "country" => "NO_COUNTRY",
+             "fin" => "ALL_FIN",
+             "first_name" => "0",
+             "gender" => "M",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "Inserted 2 results!"
+  end
+
   defp open_file!(file_name) do
     path = Path.join([:code.priv_dir(:treking), "results", file_name])
     File.read!(path)
   end
+
+  defp path(file_name \\ ""), do: Path.join([:code.priv_dir(:treking), "results/test", file_name])
 end

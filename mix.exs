@@ -52,7 +52,8 @@ defmodule Treking.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:credo, "~> 1.7"},
       {:xlsx_reader, "~> 0.8.0"},
-      {:ecto_enum, "~> 1.4"}
+      {:ecto_enum, "~> 1.4"},
+      {:elixlsx, "~> 0.5.1"}
     ]
   end
 
