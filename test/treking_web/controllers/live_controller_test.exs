@@ -70,7 +70,7 @@ defmodule TrekingWeb.LiveControllerTest do
 
       results =
         file_input(view, "#upload-form", :results, [
-          %{name: "hello.xlsx", content: open_file!("hello.xlsx")}
+          %{name: "hello.xlsx", content: open_test_file!("hello.xlsx")}
         ])
 
       render_upload(results, "hello.xlsx")
@@ -98,5 +98,11 @@ defmodule TrekingWeb.LiveControllerTest do
     File.read!(path)
   end
 
-  defp path(file_name \\ ""), do: Path.join([:code.priv_dir(:treking), "results/test", file_name])
+  defp open_test_file!(file_name) do
+    path = Path.join([:code.priv_dir(:treking), "results", "test", file_name])
+    File.read!(path)
+  end
+
+  defp path(file_name \\ ""),
+    do: Path.join([:code.priv_dir(:treking), "results", "test", file_name])
 end
