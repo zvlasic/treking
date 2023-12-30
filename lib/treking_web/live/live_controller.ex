@@ -252,6 +252,9 @@ defmodule TrekingWeb.LiveController do
     end
   end
 
+  def handle_event("persist", _, socket),
+    do: {:noreply, put_flash(socket, :error, "Missing params")}
+
   defp parse_column_value(column) do
     case Integer.parse(column) do
       :error -> column

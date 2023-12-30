@@ -10,6 +10,21 @@ defmodule TrekingWeb.LiveControllerTest do
   end
 
   describe "uploads" do
+    test "don't work without all needed params", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      results =
+        file_input(view, "#upload-form", :results, [
+          %{name: "test1.xlsx", content: open_file!("test1.xlsx")}
+        ])
+
+      render_upload(results, "test1.xlsx")
+
+      assert render_click(view, "save") =~ "Kornélia"
+
+      assert render_click(view, "persist", %{}) =~ "Missing params"
+    end
+
     test "don't work without selecting file", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
       assert render_click(view, "save") =~ "Select a file!"
