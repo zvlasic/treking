@@ -25,19 +25,8 @@ defmodule TrekingWeb.LiveControllerTest do
       {:ok, view, _html} = live(conn, ~p"/")
       prepare_upload(view, "test1.xlsx")
       assert click_upload(view) =~ "Kornélia"
-      race = hd(Repo.all(Treking.Schemas.Race))
 
-      params = %{
-        "birth_year" => "5",
-        "country" => "NO_COUNTRY",
-        "fin" => "ALL_FIN",
-        "first_name" => "8",
-        "gender" => "F",
-        "last_name" => "9",
-        "race" => race.id,
-        "position" => "0",
-        "category" => "challenger"
-      }
+      params = default_params()
 
       params = Map.put(params, "birth_year", "-1")
       assert click_insert(view, params) =~ "Column out of range"
@@ -51,17 +40,7 @@ defmodule TrekingWeb.LiveControllerTest do
       prepare_upload(view, "test1.xlsx")
       assert click_upload(view) =~ "Kornélia"
 
-      params = %{
-        "birth_year" => "5",
-        "country" => "NO_COUNTRY",
-        "fin" => "ALL_FIN",
-        "first_name" => "8",
-        "gender" => "F",
-        "last_name" => "9",
-        "race" => "uuid",
-        "position" => "0",
-        "category" => "challenger"
-      }
+      params = default_params()
 
       params = Map.put(params, "race", "")
       assert click_insert(view, params) =~ "Select race!"
@@ -75,19 +54,10 @@ defmodule TrekingWeb.LiveControllerTest do
       {:ok, view, _html} = live(conn, ~p"/")
       prepare_upload(view, "test1.xlsx")
       assert click_upload(view) =~ "Kornélia"
-      race = hd(Repo.all(Treking.Schemas.Race))
 
-      assert click_insert(view, %{
-               "birth_year" => "5",
-               "country" => "NO_COUNTRY",
-               "fin" => "ALL_FIN",
-               "first_name" => "8",
-               "gender" => "F",
-               "last_name" => "9",
-               "race" => race.id,
-               "position" => "0",
-               "category" => "challenger"
-             }) =~ "Inserted 1 results!"
+      params = default_params()
+
+      assert click_insert(view, params) =~ "Inserted 1 results!"
     end
 
     test "work (created file)", %{conn: conn} do
@@ -139,4 +109,18 @@ defmodule TrekingWeb.LiveControllerTest do
 
   defp random_string(length \\ 10),
     do: :crypto.strong_rand_bytes(length) |> Base.url_encode64() |> binary_part(0, length)
+
+  defp default_params do
+    %{
+      "birth_year" => "5",
+      "country" => "NO_COUNTRY",
+      "fin" => "ALL_FIN",
+      "first_name" => "8",
+      "gender" => "F",
+      "last_name" => "9",
+      "race" => hd(Repo.all(Treking.Schemas.Race)).id,
+      "position" => "0",
+      "category" => "challenger"
+    }
+  end
 end
