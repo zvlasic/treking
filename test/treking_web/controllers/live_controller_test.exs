@@ -12,12 +12,7 @@ defmodule TrekingWeb.LiveControllerTest do
     test "don't work without all needed params", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
-      results =
-        file_input(view, "#upload-form", :results, [
-          %{name: "test1.xlsx", content: open_file!("test1.xlsx")}
-        ])
-
-      render_upload(results, "test1.xlsx")
+      prepare_upload_from_existing(view, "test1.xlsx")
 
       assert render_click(view, "upload") =~ "Kornélia"
 
@@ -32,12 +27,7 @@ defmodule TrekingWeb.LiveControllerTest do
     test "work", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
-      results =
-        file_input(view, "#upload-form", :results, [
-          %{name: "test1.xlsx", content: open_file!("test1.xlsx")}
-        ])
-
-      render_upload(results, "test1.xlsx")
+      prepare_upload_from_existing(view, "test1.xlsx")
 
       assert render_click(view, "upload") =~ "Kornélia"
 
@@ -67,12 +57,7 @@ defmodule TrekingWeb.LiveControllerTest do
 
       {:ok, view, _html} = live(conn, ~p"/")
 
-      results =
-        file_input(view, "#upload-form", :results, [
-          %{name: "hello.xlsx", content: open_test_file!("hello.xlsx")}
-        ])
-
-      render_upload(results, "hello.xlsx")
+      prepare_upload_from_generated(view, "hello.xlsx")
 
       assert render_click(view, "upload") =~ "Marko"
 
@@ -90,6 +75,20 @@ defmodule TrekingWeb.LiveControllerTest do
                "category" => "challenger"
              }) =~ "Inserted 2 results!"
     end
+  end
+
+  defp prepare_upload_from_existing(view, filename) do
+    view
+    |> file_input("#upload-form", :results, [%{name: filename, content: open_file!(filename)}])
+    |> render_upload(filename)
+  end
+
+  defp prepare_upload_from_generated(view, filename) do
+    view
+    |> file_input("#upload-form", :results, [
+      %{name: filename, content: open_test_file!(filename)}
+    ])
+    |> render_upload(filename)
   end
 
   defp open_file!(file_name) do
