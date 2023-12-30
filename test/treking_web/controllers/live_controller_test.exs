@@ -8,27 +8,18 @@ defmodule TrekingWeb.LiveControllerTest do
     assert render_click(view, "save") =~ "Select a file!"
   end
 
-  test "upload with selecting file", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/")
-
-    results =
-      file_input(view, "#upload-form", :results, [
-        %{name: "challenger.xlsx", content: File.read!("challenger.xlsx")}
-      ])
-
-    render_upload(results, "challenger.xlsx")
-    assert render_click(view, "save") =~ "Kornélia"
-  end
-
   test "works", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/")
 
     results =
       file_input(view, "#upload-form", :results, [
-        %{name: "challenger.xlsx", content: File.read!("challenger.xlsx")}
+        %{name: "test1.xlsx", content: open_file!("test1.xlsx")}
       ])
 
-    render_upload(results, "challenger.xlsx")
+    render_upload(results, "test1.xlsx")
+
+    assert render_click(view, "save") =~ "Kornélia"
+
     render_click(view, "save")
 
     race = Repo.all(Treking.Schemas.Race) |> hd()
@@ -44,5 +35,10 @@ defmodule TrekingWeb.LiveControllerTest do
              "position" => "0",
              "category" => "challenger"
            }) =~ "Inserted 1 results!"
+  end
+
+  defp open_file!(file_name) do
+    path = Path.join([:code.priv_dir(:treking), "results", file_name])
+    File.read!(path)
   end
 end
