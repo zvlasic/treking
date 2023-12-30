@@ -2,7 +2,6 @@ defmodule TrekingWeb.LiveControllerTest do
   use TrekingWeb.ConnCase, async: true
 
   alias Treking.Repo
-
   alias Elixlsx.{Workbook, Sheet}
 
   setup do
@@ -20,14 +19,14 @@ defmodule TrekingWeb.LiveControllerTest do
 
       render_upload(results, "test1.xlsx")
 
-      assert render_click(view, "save") =~ "Kornélia"
+      assert render_click(view, "upload") =~ "Kornélia"
 
-      assert render_click(view, "persist", %{}) =~ "Missing params"
+      assert render_click(view, "insert-results", %{}) =~ "Missing params"
     end
 
     test "don't work without selecting file", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
-      assert render_click(view, "save") =~ "Select a file!"
+      assert render_click(view, "upload") =~ "Select a file!"
     end
 
     test "work", %{conn: conn} do
@@ -40,11 +39,11 @@ defmodule TrekingWeb.LiveControllerTest do
 
       render_upload(results, "test1.xlsx")
 
-      assert render_click(view, "save") =~ "Kornélia"
+      assert render_click(view, "upload") =~ "Kornélia"
 
       race = Repo.all(Treking.Schemas.Race) |> hd()
 
-      assert render_click(view, "persist", %{
+      assert render_click(view, "insert-results", %{
                "birth_year" => "5",
                "country" => "NO_COUNTRY",
                "fin" => "ALL_FIN",
@@ -75,11 +74,11 @@ defmodule TrekingWeb.LiveControllerTest do
 
       render_upload(results, "hello.xlsx")
 
-      assert render_click(view, "save") =~ "Marko"
+      assert render_click(view, "upload") =~ "Marko"
 
       race = Repo.all(Treking.Schemas.Race) |> hd()
 
-      assert render_click(view, "persist", %{
+      assert render_click(view, "insert-results", %{
                "birth_year" => "NO_YEAR",
                "country" => "NO_COUNTRY",
                "fin" => "ALL_FIN",

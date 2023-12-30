@@ -45,14 +45,14 @@ defmodule TrekingWeb.LiveController do
   def render(assigns) do
     ~H"""
     <div id="uploads">
-      <form id="upload-form" phx-submit="save" phx-change="validate">
+      <form id="upload-form" phx-submit="upload" phx-change="validate-upload">
         <.live_file_input upload={@uploads.results} />
         <.button phx-disable-with="Uploading...">Upload</.button>
       </form>
     </div>
     <div class="flex h-screen bg-gray-100">
       <div class="w-64 bg-white p-4 shadow-lg flex-shrink-0">
-        <form phx-submit="persist">
+        <form phx-submit="insert-results">
           <.input
             label="First name"
             type="select"
@@ -93,7 +93,7 @@ defmodule TrekingWeb.LiveController do
             options={@category_options}
             value=""
           />
-          <.button>Persist</.button>
+          <.button>Insert results</.button>
         </form>
       </div>
 
@@ -132,10 +132,10 @@ defmodule TrekingWeb.LiveController do
     """
   end
 
-  def handle_event("save", _, %{assigns: %{uploads: %{results: %{entries: []}}}} = socket),
+  def handle_event("upload", _, %{assigns: %{uploads: %{results: %{entries: []}}}} = socket),
     do: {:noreply, put_flash(socket, :error, "Select a file!")}
 
-  def handle_event("save", _params, socket) do
+  def handle_event("upload", _params, socket) do
     [file] =
       consume_uploaded_entries(socket, :results, fn %{path: path}, entry ->
         dest =
@@ -177,10 +177,10 @@ defmodule TrekingWeb.LiveController do
     {:noreply, socket}
   end
 
-  def handle_event("validate", _params, socket), do: {:noreply, socket}
+  def handle_event("validate-upload", _params, socket), do: {:noreply, socket}
 
   def handle_event(
-        "persist",
+        "insert-results",
         %{
           "birth_year" => birth_year_column,
           "country" => country_column,
@@ -252,7 +252,7 @@ defmodule TrekingWeb.LiveController do
     end
   end
 
-  def handle_event("persist", _, socket),
+  def handle_event("insert-results", _, socket),
     do: {:noreply, put_flash(socket, :error, "Missing params")}
 
   defp parse_column_value(column) do
