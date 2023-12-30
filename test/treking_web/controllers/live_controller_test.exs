@@ -5,14 +5,14 @@ defmodule TrekingWeb.LiveControllerTest do
   alias Elixlsx.{Workbook, Sheet}
 
   setup do
-    on_exit(fn -> File.rm_rf!(path()) end)
+    on_exit(fn -> path("autogen*") |> Path.wildcard() |> Enum.each(&File.rm!(&1)) end)
   end
 
   describe "uploads" do
     test "don't work without all needed params", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
-      prepare_upload_from_existing(view, "test1.xlsx")
+      prepare_upload(view, "test1.xlsx")
 
       assert render_click(view, "upload") =~ "Kornélia"
 
@@ -27,7 +27,7 @@ defmodule TrekingWeb.LiveControllerTest do
     test "work", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
 
-      prepare_upload_from_existing(view, "test1.xlsx")
+      prepare_upload(view, "test1.xlsx")
 
       assert render_click(view, "upload") =~ "Kornélia"
 
@@ -53,11 +53,11 @@ defmodule TrekingWeb.LiveControllerTest do
       }
 
       Workbook.append_sheet(%Workbook{}, sheet)
-      |> Elixlsx.write_to(path("hello.xlsx"))
+      |> Elixlsx.write_to(path("autogen1.xlsx"))
 
       {:ok, view, _html} = live(conn, ~p"/")
 
-      prepare_upload_from_generated(view, "hello.xlsx")
+      prepare_upload(view, "autogen1.xlsx")
 
       assert render_click(view, "upload") =~ "Marko"
 
@@ -77,30 +77,12 @@ defmodule TrekingWeb.LiveControllerTest do
     end
   end
 
-  defp prepare_upload_from_existing(view, filename) do
+  defp prepare_upload(view, filename) do
     view
     |> file_input("#upload-form", :results, [%{name: filename, content: open_file!(filename)}])
     |> render_upload(filename)
   end
 
-  defp prepare_upload_from_generated(view, filename) do
-    view
-    |> file_input("#upload-form", :results, [
-      %{name: filename, content: open_test_file!(filename)}
-    ])
-    |> render_upload(filename)
-  end
-
-  defp open_file!(file_name) do
-    path = Path.join([:code.priv_dir(:treking), "results", file_name])
-    File.read!(path)
-  end
-
-  defp open_test_file!(file_name) do
-    path = Path.join([:code.priv_dir(:treking), "results", "test", file_name])
-    File.read!(path)
-  end
-
-  defp path(file_name \\ ""),
-    do: Path.join([:code.priv_dir(:treking), "results", "test", file_name])
+  defp open_file!(file_name), do: file_name |> path() |> File.read!()
+  defp path(file_name), do: Path.join([:code.priv_dir(:treking), "results", file_name])
 end
