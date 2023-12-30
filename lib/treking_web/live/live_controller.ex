@@ -296,7 +296,7 @@ defmodule TrekingWeb.LiveController do
          do: extract_dnf(value)
   end
 
-  defp parse_dnf(_, _), do: {:error, "Invald column value for dnf"}
+  defp parse_dnf(_, _), do: {:error, "Invalid column value for dnf"}
 
   defp parse_position(_, _, true), do: {:ok, nil}
 
