@@ -46,6 +46,31 @@ defmodule TrekingWeb.LiveControllerTest do
       assert click_insert(view, params) =~ "Column out of range"
     end
 
+    test "don't work with unselected race or category", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+      prepare_upload(view, "test1.xlsx")
+      assert click_upload(view) =~ "Kornélia"
+
+      params = %{
+        "birth_year" => "5",
+        "country" => "NO_COUNTRY",
+        "fin" => "ALL_FIN",
+        "first_name" => "8",
+        "gender" => "F",
+        "last_name" => "9",
+        "race" => "uuid",
+        "position" => "0",
+        "category" => "challenger"
+      }
+
+      params = Map.put(params, "race", "")
+      assert click_insert(view, params) =~ "Select race!"
+
+      params = Map.put(params, "race", "uuid")
+      params = Map.put(params, "category", "")
+      assert click_insert(view, params) =~ "Select category!"
+    end
+
     test "work (existing file)", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
       prepare_upload(view, "test1.xlsx")
