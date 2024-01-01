@@ -71,19 +71,9 @@ defmodule TrekingWeb.LiveControllerTest do
       {:ok, view, _html} = live(conn, ~p"/")
       prepare_upload(view, file_name)
       assert click_upload(view) =~ "Marko"
-      race = hd(Repo.all(Treking.Schemas.Race))
 
-      assert click_insert(view, %{
-               "birth_year" => "NO_YEAR",
-               "country" => "NO_COUNTRY",
-               "fin" => "ALL_FIN",
-               "first_name" => "0",
-               "gender" => "M",
-               "last_name" => "1",
-               "race" => race.id,
-               "position" => "2",
-               "category" => "challenger"
-             }) =~ "Inserted 2 results!"
+      params = default_generated_params()
+      assert click_insert(view, params) =~ "Inserted 2 results!"
     end
   end
 
@@ -97,19 +87,9 @@ defmodule TrekingWeb.LiveControllerTest do
     {:ok, view, _html} = live(conn, ~p"/")
     prepare_upload(view, file_name)
     assert click_upload(view) =~ "Marko"
-    race = hd(Repo.all(Treking.Schemas.Race))
 
-    assert click_insert(view, %{
-             "birth_year" => "NO_YEAR",
-             "country" => "NO_COUNTRY",
-             "fin" => "ALL_FIN",
-             "first_name" => "0",
-             "gender" => "M",
-             "last_name" => "1",
-             "race" => race.id,
-             "position" => "2",
-             "category" => "challenger"
-           }) =~ "Invalid integer"
+    params = default_generated_params()
+    assert click_insert(view, params) =~ "Invalid integer"
   end
 
   test "handle empty cell", %{conn: conn} do
@@ -122,19 +102,10 @@ defmodule TrekingWeb.LiveControllerTest do
     {:ok, view, _html} = live(conn, ~p"/")
     prepare_upload(view, file_name)
     assert click_upload(view) =~ "Kos"
-    race = hd(Repo.all(Treking.Schemas.Race))
 
-    assert click_insert(view, %{
-             "birth_year" => "NO_YEAR",
-             "country" => "NO_COUNTRY",
-             "fin" => "ALL_FIN",
-             "first_name" => "0",
-             "gender" => "M",
-             "last_name" => "1",
-             "race" => race.id,
-             "position" => "2",
-             "category" => "challenger"
-           }) =~ "Empty string"
+    params = default_generated_params()
+
+    assert click_insert(view, params) =~ "Empty string"
   end
 
   test "handle invalid gender marker", %{conn: conn} do
@@ -147,19 +118,11 @@ defmodule TrekingWeb.LiveControllerTest do
     {:ok, view, _html} = live(conn, ~p"/")
     prepare_upload(view, file_name)
     assert click_upload(view) =~ "Marko"
-    race = hd(Repo.all(Treking.Schemas.Race))
 
-    assert click_insert(view, %{
-             "birth_year" => "NO_YEAR",
-             "country" => "NO_COUNTRY",
-             "fin" => "ALL_FIN",
-             "first_name" => "0",
-             "gender" => "3",
-             "last_name" => "1",
-             "race" => race.id,
-             "position" => "2",
-             "category" => "challenger"
-           }) =~ "G not in gender markers"
+    params = default_generated_params()
+    params = Map.put(params, "gender", "3")
+
+    assert click_insert(view, params) =~ "G not in gender markers"
   end
 
   test "handle invalid dnf marker", %{conn: conn} do
@@ -172,44 +135,28 @@ defmodule TrekingWeb.LiveControllerTest do
     {:ok, view, _html} = live(conn, ~p"/")
     prepare_upload(view, file_name)
     assert click_upload(view) =~ "Marko"
-    race = hd(Repo.all(Treking.Schemas.Race))
 
-    assert click_insert(view, %{
-             "birth_year" => "NO_YEAR",
-             "country" => "NO_COUNTRY",
-             "fin" => "3",
-             "first_name" => "0",
-             "gender" => "M",
-             "last_name" => "1",
-             "race" => race.id,
-             "position" => "2",
-             "category" => "challenger"
-           }) =~ "X not in dnf markers"
+    params = default_generated_params()
+    params = Map.put(params, "fin", "3")
+
+    assert click_insert(view, params) =~ "X not in dnf markers"
   end
 
   test "handle invalid country", %{conn: conn} do
     file_name =
       create_file([
-        ["First Name", "Last Name", "Position", "Gender", "Country"],
+        ["First Name", "Last Name", "Position", "Country"],
         ["Marko", "Kos", 1, "M", "Ooga"]
       ])
 
     {:ok, view, _html} = live(conn, ~p"/")
     prepare_upload(view, file_name)
     assert click_upload(view) =~ "Marko"
-    race = hd(Repo.all(Treking.Schemas.Race))
 
-    assert click_insert(view, %{
-             "birth_year" => "NO_YEAR",
-             "country" => "4",
-             "fin" => "ALL_FIN",
-             "first_name" => "0",
-             "gender" => "3",
-             "last_name" => "1",
-             "race" => race.id,
-             "position" => "2",
-             "category" => "challenger"
-           }) =~ "Ooga is an unknown country"
+    params = default_generated_params()
+    params = Map.put(params, "country", "4")
+
+    assert click_insert(view, params) =~ "Ooga is an unknown country"
   end
 
   defp create_file(rows) do
@@ -245,6 +192,20 @@ defmodule TrekingWeb.LiveControllerTest do
       "last_name" => "9",
       "race" => hd(Repo.all(Treking.Schemas.Race)).id,
       "position" => "0",
+      "category" => "challenger"
+    }
+  end
+
+  defp default_generated_params do
+    %{
+      "birth_year" => "NO_YEAR",
+      "country" => "NO_COUNTRY",
+      "fin" => "ALL_FIN",
+      "first_name" => "0",
+      "gender" => "M",
+      "last_name" => "1",
+      "race" => hd(Repo.all(Treking.Schemas.Race)).id,
+      "position" => "2",
       "category" => "challenger"
     }
   end
