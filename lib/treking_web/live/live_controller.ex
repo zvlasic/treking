@@ -10,7 +10,7 @@ defmodule TrekingWeb.LiveController do
   @female_markers ["Ženski", "Ž", "F"]
 
   @dnf_markers ["DNF"]
-  @fin_markers ["FIN"]
+  @dnf_markers ["FIN"]
   @dns_markers ["DNS", "REG"]
 
   def mount(_params, _session, socket) do
@@ -33,7 +33,7 @@ defmodule TrekingWeb.LiveController do
        first_name_options: [],
        last_name_options: [],
        birth_year_options: [],
-       fin_options: [],
+       dnf_options: [],
        country_options: [],
        position_options: [],
        race_options: race_options,
@@ -76,7 +76,7 @@ defmodule TrekingWeb.LiveController do
             options={@birth_year_options}
             value="-1"
           />
-          <.input label="FIN" type="select" name="fin" options={@fin_options} value="-1" />
+          <.input label="FIN" type="select" name="fin" options={@dnf_options} value="-1" />
           <.input
             label="Position"
             type="select"
@@ -166,7 +166,7 @@ defmodule TrekingWeb.LiveController do
         last_name_options: all_column_options,
         gender_options: all_column_options ++ ["M", "F"],
         birth_year_options: all_column_options ++ ["NO_YEAR"],
-        fin_options: all_column_options ++ ["ALL_FIN"],
+        dnf_options: all_column_options ++ ["ALL_FIN"],
         country_options: all_column_options ++ ["NO_COUNTRY"],
         position_options: all_column_options
       )
@@ -184,7 +184,7 @@ defmodule TrekingWeb.LiveController do
         %{
           "birth_year" => birth_year_column,
           "country" => country_column,
-          "fin" => fin_column,
+          "fin" => dnf_column,
           "first_name" => first_name_column,
           "gender" => gender_column,
           "last_name" => last_name_column,
@@ -199,13 +199,13 @@ defmodule TrekingWeb.LiveController do
     first_name_column = parse_column_value(first_name_column)
     gender_column = parse_column_value(gender_column)
     last_name_column = parse_column_value(last_name_column)
-    fin_column = parse_column_value(fin_column)
+    dnf_column = parse_column_value(dnf_column)
     position_column = parse_column_value(position_column)
 
     prepared_data =
       socket.assigns.rows
       |> Enum.reduce_while([], fn row, acc ->
-        with {:ok, dnf} <- parse_dnf(row, fin_column),
+        with {:ok, dnf} <- parse_dnf(row, dnf_column),
              {:ok, first_name} <- parse_name(row, first_name_column),
              {:ok, last_name} <- parse_name(row, last_name_column),
              {:ok, gender} <- parse_gender(row, gender_column),
@@ -393,7 +393,7 @@ defmodule TrekingWeb.LiveController do
   end
 
   defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
-  defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
+  defp extract_dnf(value) when value in @dnf_markers, do: {:ok, false}
   defp extract_dnf(value) when value in @dns_markers, do: {:error, :ignore}
   defp extract_dnf(value), do: {:error, "#{value} not in dnf markers"}
 end
