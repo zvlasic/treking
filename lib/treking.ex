@@ -20,13 +20,16 @@ defmodule Treking do
           preload: [results: ^from(result in Result, where: result.category in ^category)]
       )
 
-    Enum.map(runners, fn %{results: results} = runner ->
+    runners
+    |> Enum.map(fn %{results: results} = runner ->
       results = results |> Enum.sort_by(& &1.points, :desc) |> Enum.take(@valid_races)
       total_points = Enum.reduce(results, 0, fn result, acc -> acc + result.points end)
       per_race = results |> Enum.map(&{&1.race_id, &1.points}) |> Map.new()
 
       %{runner: runner, total_points: total_points, per_race: per_race}
     end)
+    |> Enum.filter(&(&1.total_points > 0))
+    |> Enum.sort(&(&1.total_points > &2.total_points))
   end
 
   def get_races, do: Repo.all(from race in Race, order_by: race.date)
