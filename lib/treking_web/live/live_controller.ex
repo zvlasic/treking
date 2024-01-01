@@ -382,10 +382,15 @@ defmodule TrekingWeb.LiveController do
 
   defp parse_integer(nil), do: {:ok, nil}
   defp parse_integer(""), do: {:ok, nil}
-  defp parse_integer(value) when is_binary(value), do: {:ok, String.to_integer(value)}
   defp parse_integer(value) when is_float(value), do: {:ok, trunc(value)}
   defp parse_integer(value) when is_integer(value), do: {:ok, value}
-  defp parse_integer(_), do: {:error, "Invalid integer"}
+
+  defp parse_integer(value) when is_binary(value) do
+    case Integer.parse(value) do
+      :error -> {:error, "Invalid integer"}
+      {value, _} -> {:ok, value}
+    end
+  end
 
   defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
   defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
