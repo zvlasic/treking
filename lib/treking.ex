@@ -5,6 +5,7 @@ defmodule Treking do
 
   @valid_races 8
   @dnf_points 1
+  @break_off_points 5
 
   def calculate_points(category, gender) do
     category =
@@ -91,7 +92,7 @@ defmodule Treking do
         50 => 5
       },
       position,
-      0
+      @break_off_points
     )
   end
 
