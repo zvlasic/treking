@@ -2,7 +2,7 @@ defmodule TrekingWeb.LiveControllerTest do
   use TrekingWeb.ConnCase, async: true
 
   alias Treking.Repo
-  alias Treking.Schemas.Result
+  alias Treking.Schemas.{Race, Result}
   alias Elixlsx.{Sheet, Workbook}
 
   setup do
@@ -160,7 +160,7 @@ defmodule TrekingWeb.LiveControllerTest do
     assert click_insert(view, params) =~ "Ooga is an unknown country"
   end
 
-  test "gives zero points to sub 50 result", %{conn: conn} do
+  test "gives break off points to sub 50 result", %{conn: conn} do
     file_name =
       create_file([
         ["First Name", "Last Name", "Position"],
@@ -175,7 +175,7 @@ defmodule TrekingWeb.LiveControllerTest do
 
     assert click_insert(view, params) =~ "Inserted 1 results"
 
-    assert Repo.all(Result) |> hd |> Map.get(:points) == 0
+    assert Repo.all(Result) |> hd |> Map.get(:points) == 5
   end
 
   defp create_file(rows) do
@@ -209,7 +209,7 @@ defmodule TrekingWeb.LiveControllerTest do
       "first_name" => "8",
       "gender" => "F",
       "last_name" => "9",
-      "race" => hd(Repo.all(Treking.Schemas.Race)).id,
+      "race" => Repo.insert!(%Race{name: "Krk", date: ~D[2000-01-01]}).id,
       "position" => "0",
       "category" => "challenger"
     }
@@ -223,7 +223,7 @@ defmodule TrekingWeb.LiveControllerTest do
       "first_name" => "0",
       "gender" => "M",
       "last_name" => "1",
-      "race" => hd(Repo.all(Treking.Schemas.Race)).id,
+      "race" => Repo.insert!(%Race{name: "Krk", date: ~D[2000-01-01]}).id,
       "position" => "2",
       "category" => "challenger"
     }

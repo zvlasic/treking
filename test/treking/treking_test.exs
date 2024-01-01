@@ -7,10 +7,10 @@ defmodule Treking.TrekingTest do
   setup do
     races =
       for i <- 1..12 do
-        Repo.insert!(%Race{name: "#{i}", date: Date.add(~D[2018-01-01], i)})
+        Repo.insert!(%Race{name: "Race #{i}", date: Date.add(~D[2018-01-01], i)})
       end
 
-    runner1 =
+    runner =
       Repo.insert!(%Runner{
         first_name: "male",
         last_name: "male surname",
@@ -18,27 +18,11 @@ defmodule Treking.TrekingTest do
         gender: :m
       })
 
-    runner2 =
-      Repo.insert!(%Runner{
-        first_name: "male2",
-        last_name: "male surname2",
-        birth_year: 1982,
-        gender: :m
-      })
-
-    runner3 =
-      Repo.insert!(%Runner{
-        first_name: "female2",
-        last_name: "female surname2",
-        birth_year: 1984,
-        gender: :f
-      })
-
-    {:ok, %{races: races, runner1: runner1, runner2: runner2, runner3: runner3}}
+    {:ok, %{races: races, runner: runner}}
   end
 
   describe "point calculator" do
-    test "works", %{runner1: runner, races: races} do
+    test "works", %{runner: runner, races: races} do
       [race1, race2, race3 | _] = races
       insert_result(runner, race1, 10, :challenger)
       insert_result(runner, race2, 20, :challenger)
@@ -52,7 +36,7 @@ defmodule Treking.TrekingTest do
       refute Map.get(result.per_race, race3.id)
     end
 
-    test "takes only 8 races into account", %{races: races, runner1: runner} do
+    test "takes only 8 races into account", %{races: races, runner: runner} do
       [race1, race2, race3, race4, race5, race6, race7, race8, race9 | _] = races
       insert_result(runner, race1, 1, :challenger)
       insert_result(runner, race2, 1, :challenger)
@@ -79,7 +63,7 @@ defmodule Treking.TrekingTest do
       refute Map.get(result.per_race, race9.id)
     end
 
-    test "takes category into account", %{runner1: runner, races: races} do
+    test "takes category into account", %{runner: runner, races: races} do
       [race1, race2 | _] = races
       insert_result(runner, race1, 10, :challenger)
       insert_result(runner, race2, 20, :active)
@@ -92,8 +76,12 @@ defmodule Treking.TrekingTest do
       refute Map.get(result.per_race, race2.id)
     end
 
-    test "takes gender into account", %{runner1: male, runner3: female, races: races} do
+    test "takes gender into account", %{runner: male, races: races} do
       [race | _] = races
+
+      female =
+        Repo.insert!(%Runner{first_name: "f", last_name: "s", birth_year: 1980, gender: :f})
+
       insert_result(male, race, 10, :challenger)
       insert_result(female, race, 20, :active)
 
@@ -102,15 +90,12 @@ defmodule Treking.TrekingTest do
       assert length(results) == 1
     end
 
-    test "ignores runners with 0 total points", %{runner1: runner, races: races} do
+    test "sorts results by total points desc", %{runner: runner1, races: races} do
       [race | _] = races
-      insert_result(runner, race, 60, :challenger)
-      results = Treking.calculate_points(:challenger, :m)
-      assert length(results) == 0
-    end
 
-    test "sorts results by total points desc", %{runner1: runner1, runner2: runner2, races: races} do
-      [race | _] = races
+      runner2 =
+        Repo.insert!(%Runner{first_name: "f", last_name: "s", birth_year: 1980, gender: :m})
+
       insert_result(runner1, race, 20, :challenger)
       insert_result(runner2, race, 10, :challenger)
 
