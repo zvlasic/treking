@@ -29,7 +29,6 @@ defmodule Treking do
 
       %{runner: runner, total_points: total_points, per_race: per_race}
     end)
-    |> Enum.filter(&(&1.total_points > 0))
     |> Enum.sort(&(&1.total_points > &2.total_points))
   end
 
