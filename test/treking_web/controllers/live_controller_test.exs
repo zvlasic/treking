@@ -2,6 +2,7 @@ defmodule TrekingWeb.LiveControllerTest do
   use TrekingWeb.ConnCase, async: true
 
   alias Treking.Repo
+  alias Treking.Schemas.Result
   alias Elixlsx.{Sheet, Workbook}
 
   setup do
@@ -157,6 +158,24 @@ defmodule TrekingWeb.LiveControllerTest do
     params = Map.put(params, "country", "4")
 
     assert click_insert(view, params) =~ "Ooga is an unknown country"
+  end
+
+  test "gives zero points to sub 50 result", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position"],
+        ["Marko", "Kos", 51]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+
+    params = default_generated_params()
+
+    assert click_insert(view, params) =~ "Inserted 1 results"
+
+    assert Repo.all(Result) |> hd |> Map.get(:points) == 0
   end
 
   defp create_file(rows) do
