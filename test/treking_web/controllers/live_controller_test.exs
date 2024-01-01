@@ -87,6 +87,131 @@ defmodule TrekingWeb.LiveControllerTest do
     end
   end
 
+  test "handle invalid integer", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position"],
+        ["Marko", "Kos", "s"]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+    race = hd(Repo.all(Treking.Schemas.Race))
+
+    assert click_insert(view, %{
+             "birth_year" => "NO_YEAR",
+             "country" => "NO_COUNTRY",
+             "fin" => "ALL_FIN",
+             "first_name" => "0",
+             "gender" => "M",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "Invalid integer"
+  end
+
+  test "handle empty cell", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position"],
+        ["", "Kos", "1"]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Kos"
+    race = hd(Repo.all(Treking.Schemas.Race))
+
+    assert click_insert(view, %{
+             "birth_year" => "NO_YEAR",
+             "country" => "NO_COUNTRY",
+             "fin" => "ALL_FIN",
+             "first_name" => "0",
+             "gender" => "M",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "Empty string"
+  end
+
+  test "handle invalid gender marker", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position", "Gender"],
+        ["Marko", "Kos", 1, "G"]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+    race = hd(Repo.all(Treking.Schemas.Race))
+
+    assert click_insert(view, %{
+             "birth_year" => "NO_YEAR",
+             "country" => "NO_COUNTRY",
+             "fin" => "ALL_FIN",
+             "first_name" => "0",
+             "gender" => "3",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "G not in gender markers"
+  end
+
+  test "handle invalid dnf marker", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position", "DNF"],
+        ["Marko", "Kos", 1, "X"]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+    race = hd(Repo.all(Treking.Schemas.Race))
+
+    assert click_insert(view, %{
+             "birth_year" => "NO_YEAR",
+             "country" => "NO_COUNTRY",
+             "fin" => "3",
+             "first_name" => "0",
+             "gender" => "M",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "X not in dnf markers"
+  end
+
+  test "handle invalid country", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position", "Gender", "Country"],
+        ["Marko", "Kos", 1, "M", "Ooga"]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+    race = hd(Repo.all(Treking.Schemas.Race))
+
+    assert click_insert(view, %{
+             "birth_year" => "NO_YEAR",
+             "country" => "4",
+             "fin" => "ALL_FIN",
+             "first_name" => "0",
+             "gender" => "3",
+             "last_name" => "1",
+             "race" => race.id,
+             "position" => "2",
+             "category" => "challenger"
+           }) =~ "Ooga is an unknown country"
+  end
+
   defp create_file(rows) do
     sheet = %Sheet{name: random_string(), rows: rows}
     filename = "autogen#{random_string()}.xlsx"
