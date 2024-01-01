@@ -12,8 +12,8 @@
 
 # Insert a race
 
-alias Treking.Repo
-alias Treking.Schemas.Race
+# alias Treking.Repo
+# alias Treking.Schemas.Race
 
-Repo.insert(%Race{name: "Krk", date: ~D[2000-01-01]})
-Repo.insert(%Race{name: "Rab", date: ~D[2000-02-02]})
+# Repo.insert(%Race{name: "Krk", date: ~D[2000-01-01]})
+# Repo.insert(%Race{name: "Rab", date: ~D[2000-02-02]})
