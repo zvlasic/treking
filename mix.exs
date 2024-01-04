@@ -53,7 +53,8 @@ defmodule Treking.MixProject do
       {:credo, "~> 1.7"},
       {:xlsx_reader, "~> 0.8.0"},
       {:ecto_enum, "~> 1.4"},
-      {:elixlsx, "~> 0.5.1"}
+      {:elixlsx, "~> 0.5.1"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 
