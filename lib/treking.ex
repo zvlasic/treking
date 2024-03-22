@@ -22,6 +22,7 @@ defmodule Treking do
       )
 
     runners
+    |> Enum.filter(&(&1.results != []))
     |> Enum.map(fn %{results: results} = runner ->
       results = results |> Enum.sort_by(& &1.points, :desc) |> Enum.take(@valid_races)
       total_points = Enum.reduce(results, 0, fn result, acc -> acc + result.points end)
