@@ -9,9 +9,9 @@ defmodule TrekingWeb.LiveController do
   @male_markers ["Muški", "M"]
   @female_markers ["Ženski", "Ž", "F"]
 
+  @fin_markers ["FIN"]
   @dnf_markers ["DNF"]
-  @dnf_markers ["FIN"]
-  @dns_markers ["DNS", "REG"]
+  @dns_markers ["DNS", "REG", "DSQ"]
 
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
@@ -392,8 +392,10 @@ defmodule TrekingWeb.LiveController do
     end
   end
 
+  defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
   defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
-  defp extract_dnf(value) when value in @dnf_markers, do: {:ok, false}
   defp extract_dnf(value) when value in @dns_markers, do: {:error, :ignore}
+  # TBD - if no time count as dnf, but maybe should be ignored
+  defp extract_dnf(value) when value == "", do: {:ok, true}
   defp extract_dnf(value), do: {:error, "#{value} not in dnf markers"}
 end
