@@ -174,8 +174,25 @@ defmodule TrekingWeb.LiveControllerTest do
     params = default_generated_params()
 
     assert click_insert(view, params) =~ "Inserted 1 results"
-
     assert Repo.all(Result) |> hd |> Map.get(:points) == 5
+  end
+
+  test "sets empty cell as dnf", %{conn: conn} do
+    file_name =
+      create_file([
+        ["First Name", "Last Name", "Position"],
+        ["Marko", "Kos", ""]
+      ])
+
+    {:ok, view, _html} = live(conn, ~p"/")
+    prepare_upload(view, file_name)
+    assert click_upload(view) =~ "Marko"
+
+    params = default_generated_params()
+    params = Map.put(params, "fin", "2")
+
+    assert click_insert(view, params) =~ "Inserted 1 results"
+    assert Repo.all(Result) |> hd |> Map.get(:points) == 1
   end
 
   defp create_file(rows) do
