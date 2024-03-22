@@ -2,6 +2,7 @@ defmodule Treking do
   import Ecto.Query
   alias Treking.Repo
   alias Treking.Schemas.{Race, Result, Runner}
+  alias Elixlsx.{Sheet, Workbook}
 
   @valid_races 8
   @dnf_points 1
@@ -31,6 +32,46 @@ defmodule Treking do
       %{runner: runner, total_points: total_points, per_race: per_race}
     end)
     |> Enum.sort(&(&1.total_points > &2.total_points))
+  end
+
+  def print_results(results) do
+    races = get_races()
+
+    headers = ["#", "Ime", "Prezime", "Godina", "Država", "Ukupno"]
+    headers = Enum.reduce(races, headers, fn race, acc -> acc ++ [race.name] end)
+
+    {_, _, rows} =
+      Enum.reduce(results, {1, nil, []}, fn %{
+                                              runner: runner,
+                                              total_points: total_points,
+                                              per_race: per_race
+                                            },
+                                            {position, last_points, rows} ->
+        printed_position = if total_points == last_points, do: "", else: position
+        last_points = if total_points == last_points, do: last_points, else: total_points
+
+        row =
+          [
+            printed_position,
+            runner.first_name,
+            runner.last_name,
+            runner.birth_year || "",
+            runner.country || "",
+            total_points
+          ]
+
+        row =
+          Enum.reduce(races, row, fn race, acc ->
+            points = Map.get(per_race, race.id, "")
+            acc ++ [points]
+          end)
+
+        {position + 1, last_points, rows ++ [row]}
+      end)
+
+    sheet = %Sheet{name: "name", rows: [headers | rows]}
+    workbook = %Workbook{sheets: [sheet]}
+    Elixlsx.write_to(workbook, "results.xlsx")
   end
 
   def get_races, do: Repo.all(from race in Race, order_by: race.date)
@@ -182,7 +223,9 @@ defmodule Treking do
           "Serbia" => "SRBIJA",
           "Slovenia" => "SLOVENIJA",
           "Slovenija" => "SLOVENIJA",
-          "SLO" => "SLOVENIJA"
+          "SLO" => "SLOVENIJA",
+          "CZE - Czechia" => "ČEŠKA",
+          "KGZ - Kyrgyzstan" => "KIRGISTAN"
         },
         input
       )
