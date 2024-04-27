@@ -225,7 +225,12 @@ defmodule Treking do
           "Slovenija" => "SLOVENIJA",
           "SLO" => "SLOVENIJA",
           "CZE - Czechia" => "ČEŠKA",
-          "KGZ - Kyrgyzstan" => "KIRGISTAN"
+          "KGZ - Kyrgyzstan" => "KIRGISTAN",
+          "UKR - Ukraine" => "UKRAJINA",
+          "MHL - Marshall Islands" => "MARŠALSKI OTOCI",
+          "CHN - China" => "KINA",
+          "RUS - Russia" => "RUSIJA",
+          "HAI - Haiti" => "HAITI"
         },
         input
       )
