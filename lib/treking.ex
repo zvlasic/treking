@@ -8,6 +8,23 @@ defmodule Treking do
   @dnf_points 1
   @break_off_points 5
 
+  def create_all do
+    sheets =
+      [
+        {"CHALLENGER MUŠKI", :challenger, :m},
+        {"CHALLENGER ŽENSKI", :challenger, :f},
+        {"ACTIVE MUŠKI", :active, :m},
+        {"ACTIVE ŽENSKI", :active, :f}
+      ]
+      |> Enum.map(fn {sheet_name, category, gender} ->
+        points_data = calculate_points(category, gender)
+        create_sheet(sheet_name, points_data)
+      end)
+
+    workbook = %Workbook{sheets: sheets}
+    Elixlsx.write_to(workbook, "results.xlsx")
+  end
+
   def calculate_points(category, gender) do
     category =
       case category do
@@ -34,7 +51,7 @@ defmodule Treking do
     |> Enum.sort(&(&1.total_points > &2.total_points))
   end
 
-  def print_results(results) do
+  def create_sheet(sheet_name, results) do
     races = get_races()
 
     headers = ["#", "Ime", "Prezime", "Godina", "Država", "Ukupno"]
@@ -69,9 +86,7 @@ defmodule Treking do
         {position + 1, last_points, rows ++ [row]}
       end)
 
-    sheet = %Sheet{name: "name", rows: [headers | rows]}
-    workbook = %Workbook{sheets: [sheet]}
-    Elixlsx.write_to(workbook, "results.xlsx")
+    %Sheet{name: sheet_name, rows: [headers | rows]}
   end
 
   def get_races, do: Repo.all(from race in Race, order_by: race.date)
