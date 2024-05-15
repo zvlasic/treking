@@ -72,7 +72,7 @@ defmodule Treking do
             printed_position,
             runner.first_name,
             runner.last_name,
-            runner.birth_year || "",
+            to_string(runner.birth_year),
             runner.country || "",
             total_points
           ]
