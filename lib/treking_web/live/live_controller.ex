@@ -205,7 +205,8 @@ defmodule TrekingWeb.LiveController do
     prepared_data =
       socket.assigns.rows
       |> Enum.reduce_while([], fn row, acc ->
-        with {:ok, dnf} <- parse_dnf(row, dnf_column),
+        with :ok <- check_empty_row(row),
+             {:ok, dnf} <- parse_dnf(row, dnf_column),
              {:ok, first_name} <- parse_name(row, first_name_column),
              {:ok, last_name} <- parse_name(row, last_name_column),
              {:ok, gender} <- parse_gender(row, gender_column),
@@ -254,6 +255,9 @@ defmodule TrekingWeb.LiveController do
 
   def handle_event("insert-results", _, socket),
     do: {:noreply, put_flash(socket, :error, "Missing params")}
+
+  defp check_empty_row([]), do: {:error, :ignore}
+  defp check_empty_row(_), do: :ok
 
   defp parse_column_value(column) do
     case Integer.parse(column) do
