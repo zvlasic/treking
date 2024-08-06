@@ -10,16 +10,18 @@ defmodule Treking do
 
   def create_all do
     sheets =
-      [
-        {"CHALLENGER MUŠKI", :challenger, :m},
-        {"CHALLENGER ŽENSKI", :challenger, :f},
-        {"ACTIVE MUŠKI", :active, :m},
-        {"ACTIVE ŽENSKI", :active, :f}
-      ]
-      |> Enum.map(fn {sheet_name, category, gender} ->
-        points_data = calculate_points(category, gender)
-        create_sheet(sheet_name, points_data)
-      end)
+      Enum.map(
+        [
+          {"CHALLENGER MUŠKI", :challenger, :m},
+          {"CHALLENGER ŽENSKI", :challenger, :f},
+          {"ACTIVE MUŠKI", :active, :m},
+          {"ACTIVE ŽENSKI", :active, :f}
+        ],
+        fn {sheet_name, category, gender} ->
+          points_data = calculate_points(category, gender)
+          create_sheet(sheet_name, points_data)
+        end
+      )
 
     workbook = %Workbook{sheets: sheets}
     Elixlsx.write_to(workbook, "results.xlsx")

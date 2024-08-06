@@ -95,6 +95,7 @@ defmodule TrekingWeb.LiveController do
           />
           <.button>Insert results</.button>
         </form>
+        <.button phx-click="export">Export</.button>
       </div>
 
       <div class="flex-1 p-10 overflow-auto">
@@ -134,6 +135,11 @@ defmodule TrekingWeb.LiveController do
 
   def handle_event("upload", _, %{assigns: %{uploads: %{results: %{entries: []}}}} = socket),
     do: {:noreply, put_flash(socket, :error, "Select a file!")}
+
+  def handle_event("export", _, socket) do
+    Treking.create_all()
+    {:noreply, socket}
+  end
 
   def handle_event("upload", _params, socket) do
     [file] =
