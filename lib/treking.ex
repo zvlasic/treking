@@ -162,6 +162,7 @@ defmodule Treking do
           "Austria" => "AUSTRIJA",
           "AUT - Austria" => "AUSTRIJA",
           "AUT" => "AUSTRIJA",
+          "AFG - Afghanistan" => "AFGANISTAN",
           "BEL - Belgium" => "BELGIJA",
           "BEL" => "BELGIJA",
           "Belgium" => "BELGIJA",
