@@ -111,7 +111,7 @@ defmodule TrekingWeb.LiveController do
                   scope="col"
                   class="sticky top-0 z-10 border-b border-gray-300 bg-white bg-opacity-75 py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 backdrop-blur backdrop-filter sm:pl-6 lg:pl-8"
                 >
-                  <%= "#{i} #{Enum.at(@col, i)}" %>
+                  {"#{i} #{Enum.at(@col, i)}"}
                 </th>
               <% end %>
             </tr>
@@ -121,7 +121,7 @@ defmodule TrekingWeb.LiveController do
               <tr>
                 <%= for data <- row do %>
                   <td class="whitespace-nowrap border-b border-gray-200 py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 lg:pl-8">
-                    <%= data %>
+                    {data}
                   </td>
                 <% end %>
               </tr>

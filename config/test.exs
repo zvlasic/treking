@@ -20,12 +20,6 @@ config :treking, TrekingWeb.Endpoint,
   secret_key_base: "94tRVFjKW+ncerhPPd8M0BYsX2PMJX3S5/KaNCwz42QlYMF39RYHp+Jdu/Auv3mN",
   server: false
 
-# In test we don't send emails.
-config :treking, Treking.Mailer, adapter: Swoosh.Adapters.Test
-
-# Disable swoosh api client as it is only required for production adapters.
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 

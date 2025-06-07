@@ -8,9 +8,7 @@ defmodule Treking.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      TrekingWeb.Telemetry,
       Treking.Repo,
-      {DNSCluster, query: Application.get_env(:treking, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Treking.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Treking.Finch},
