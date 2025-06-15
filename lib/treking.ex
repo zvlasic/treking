@@ -159,6 +159,7 @@ defmodule Treking do
       Map.get(
         %{
           "AUS - Australia" => "AUSTRALIJA",
+          "ARG - Argentina" => "ARGENTINA",
           "Austria" => "AUSTRIJA",
           "AUT - Austria" => "AUSTRIJA",
           "AUT" => "AUSTRIJA",
@@ -234,6 +235,7 @@ defmodule Treking do
           "RUS" => "RUSIJA",
           "SAD" => "SAD",
           "SLO - Slovenia" => "SLOVENIJA",
+          "SVN - Slovenia" => "SLOVENIJA",
           "SRB - Serbia" => "SRBIJA",
           "SUI - Switzerland" => "ŠVICARSKA",
           "SVK - Slovakia" => "SLOVAČKA",
@@ -257,7 +259,10 @@ defmodule Treking do
           "MHL - Marshall Islands" => "MARŠALSKI OTOCI",
           "CHN - China" => "KINA",
           "RUS - Russia" => "RUSIJA",
-          "HAI - Haiti" => "HAITI"
+          "HAI - Haiti" => "HAITI",
+          "CAF - Central African Republic" => "CENTRAL AFRICAN REPUBLIC",
+          "PER - Peru" => "PERU",
+          "BRN - Bahrain" => "BAHREIN"
         },
         input
       )
