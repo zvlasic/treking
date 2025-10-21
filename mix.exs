@@ -5,7 +5,7 @@ defmodule Treking.MixProject do
     [
       app: :treking,
       version: "0.1.0",
-      elixir: "~> 1.16.0",
+      elixir: "~> 1.19",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -32,7 +32,7 @@ defmodule Treking.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.10"},
+      {:phoenix, "~> 1.8.1"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
@@ -42,7 +42,7 @@ defmodule Treking.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.2"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.4.1", runtime: Mix.env() == :dev},
       {:finch, "~> 0.13"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
