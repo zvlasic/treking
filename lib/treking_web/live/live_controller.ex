@@ -1,10 +1,7 @@
 defmodule TrekingWeb.LiveController do
   use TrekingWeb, :live_view
 
-  import Ecto.Query
-
-  alias Treking.Repo
-  alias Treking.Schemas.{Result, Runner}
+  alias Treking.Schemas.Result
 
   @male_markers ["Muški", "M", "1-Male"]
   @female_markers ["Ženski", "Ž", "F", "2-Female"]
@@ -249,7 +246,7 @@ defmodule TrekingWeb.LiveController do
       end
 
     with {:ok, prepared_data} <- prepared_data,
-         {:ok, inserted_results} <- insert(prepared_data) do
+         {:ok, inserted_results} <- Treking.insert(prepared_data) do
       {:noreply, put_flash(socket, :info, "Inserted #{length(inserted_results)} results!")}
     else
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -344,52 +341,6 @@ defmodule TrekingWeb.LiveController do
 
   defp check_empty(value),
     do: if(String.length(value) > 0, do: :ok, else: {:error, "Empty string"})
-
-  defp insert(data) do
-    Repo.transaction(fn ->
-      response =
-        Enum.reduce_while(data, [], fn row, acc ->
-          with {:ok, runner} <- fetch_or_insert_runner(row),
-               {:ok, result} <- insert_result(runner, row) do
-            {:cont, [result | acc]}
-          else
-            {:error, reason} -> {:halt, {:error, reason}}
-          end
-        end)
-
-      case response do
-        {:error, reason} -> Repo.rollback(reason)
-        results -> results
-      end
-    end)
-  end
-
-  defp fetch_or_insert_runner(data) do
-    query =
-      from(r in Runner,
-        where: r.first_name == ^data.first_name,
-        where: r.last_name == ^data.last_name,
-        where: r.gender == ^data.gender,
-        select: r
-      )
-      |> filter_by_birth_year(data.birth_year)
-      |> filter_by_country(data.country)
-
-    case Repo.one(query) do
-      nil -> insert_runner(data)
-      runner -> {:ok, runner}
-    end
-  end
-
-  defp insert_runner(data), do: %Runner{} |> Runner.changeset(data) |> Repo.insert()
-
-  defp insert_result(runner, data),
-    do: %Result{} |> Result.changeset(Map.put(data, :runner_id, runner.id)) |> Repo.insert()
-
-  defp filter_by_birth_year(query, nil), do: query
-  defp filter_by_birth_year(query, birth_year), do: where(query, [r], r.birth_year == ^birth_year)
-  defp filter_by_country(query, nil), do: query
-  defp filter_by_country(query, country), do: where(query, [r], r.country == ^country)
 
   defp extract_gender(value) when value in @male_markers, do: {:ok, :m}
   defp extract_gender(value) when value in @female_markers, do: {:ok, :f}

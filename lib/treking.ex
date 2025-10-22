@@ -1,12 +1,31 @@
 defmodule Treking do
   import Ecto.Query
+  alias Elixlsx.{Sheet, Workbook}
   alias Treking.Repo
   alias Treking.Schemas.{Race, Result, Runner}
-  alias Elixlsx.{Sheet, Workbook}
 
   @valid_races 8
   @dnf_points 1
   @break_off_points 5
+
+  def insert(data) do
+    Repo.transaction(fn ->
+      response =
+        Enum.reduce_while(data, [], fn row, acc ->
+          with {:ok, runner} <- fetch_or_insert_runner(row),
+               {:ok, result} <- insert_result(runner, row) do
+            {:cont, [result | acc]}
+          else
+            {:error, reason} -> {:halt, {:error, reason}}
+          end
+        end)
+
+      case response do
+        {:error, reason} -> Repo.rollback(reason)
+        results -> results
+      end
+    end)
+  end
 
   def create_all_sheets do
     sheets =
@@ -25,70 +44,6 @@ defmodule Treking do
 
     workbook = %Workbook{sheets: sheets}
     Elixlsx.write_to(workbook, "results.xlsx")
-  end
-
-  defp calculate_points(category, gender) do
-    category =
-      case category do
-        :challenger -> [:challenger, :ultra, :marathon]
-        :active -> [:active]
-      end
-
-    runners =
-      Repo.all(
-        from runner in Runner,
-          where: runner.gender == ^gender,
-          preload: [results: ^from(result in Result, where: result.category in ^category)]
-      )
-
-    runners
-    |> Enum.filter(&(&1.results != []))
-    |> Enum.map(fn %{results: results} = runner ->
-      results = results |> Enum.sort_by(& &1.points, :desc) |> Enum.take(@valid_races)
-      total_points = Enum.reduce(results, 0, fn result, acc -> acc + result.points end)
-      per_race = results |> Enum.map(&{&1.race_id, &1.points}) |> Map.new()
-
-      %{runner: runner, total_points: total_points, per_race: per_race}
-    end)
-    |> Enum.sort(&(&1.total_points > &2.total_points))
-  end
-
-  defp create_sheet(sheet_name, results) do
-    races = get_races()
-
-    headers = ["#", "Ime", "Prezime", "Godina", "Država", "Ukupno"]
-    headers = Enum.reduce(races, headers, fn race, acc -> acc ++ [race.name] end)
-
-    {_, _, rows} =
-      Enum.reduce(results, {1, nil, []}, fn %{
-                                              runner: runner,
-                                              total_points: total_points,
-                                              per_race: per_race
-                                            },
-                                            {position, last_points, rows} ->
-        printed_position = if total_points == last_points, do: "", else: position
-        last_points = if total_points == last_points, do: last_points, else: total_points
-
-        row =
-          [
-            printed_position,
-            runner.first_name,
-            runner.last_name,
-            to_string(runner.birth_year),
-            runner.country || "",
-            total_points
-          ]
-
-        row =
-          Enum.reduce(races, row, fn race, acc ->
-            points = Map.get(per_race, race.id, "")
-            acc ++ [points]
-          end)
-
-        {position + 1, last_points, rows ++ [row]}
-      end)
-
-    %Sheet{name: sheet_name, rows: [headers | rows]}
   end
 
   def get_races, do: Repo.all(from race in Race, order_by: race.date)
@@ -322,5 +277,96 @@ defmodule Treking do
       nil -> {:error, "#{input} is an unknown country"}
       value -> {:ok, value}
     end
+  end
+
+  defp fetch_or_insert_runner(data) do
+    query =
+      from(r in Runner,
+        where: r.first_name == ^data.first_name,
+        where: r.last_name == ^data.last_name,
+        where: r.gender == ^data.gender,
+        select: r
+      )
+      |> filter_by_birth_year(data.birth_year)
+      |> filter_by_country(data.country)
+
+    case Repo.one(query) do
+      nil -> insert_runner(data)
+      runner -> {:ok, runner}
+    end
+  end
+
+  defp filter_by_birth_year(query, nil), do: query
+  defp filter_by_birth_year(query, birth_year), do: where(query, [r], r.birth_year == ^birth_year)
+  defp filter_by_country(query, nil), do: query
+  defp filter_by_country(query, country), do: where(query, [r], r.country == ^country)
+
+  defp insert_runner(data), do: %Runner{} |> Runner.changeset(data) |> Repo.insert()
+
+  defp insert_result(runner, data),
+    do: %Result{} |> Result.changeset(Map.put(data, :runner_id, runner.id)) |> Repo.insert()
+
+  defp calculate_points(category, gender) do
+    category =
+      case category do
+        :challenger -> [:challenger, :ultra, :marathon]
+        :active -> [:active]
+      end
+
+    runners =
+      Repo.all(
+        from runner in Runner,
+          where: runner.gender == ^gender,
+          preload: [results: ^from(result in Result, where: result.category in ^category)]
+      )
+
+    runners
+    |> Enum.filter(&(&1.results != []))
+    |> Enum.map(fn %{results: results} = runner ->
+      results = results |> Enum.sort_by(& &1.points, :desc) |> Enum.take(@valid_races)
+      total_points = Enum.reduce(results, 0, fn result, acc -> acc + result.points end)
+      per_race = results |> Enum.map(&{&1.race_id, &1.points}) |> Map.new()
+
+      %{runner: runner, total_points: total_points, per_race: per_race}
+    end)
+    |> Enum.sort(&(&1.total_points > &2.total_points))
+  end
+
+  defp create_sheet(sheet_name, results) do
+    races = get_races()
+
+    headers = ["#", "Ime", "Prezime", "Godina", "Država", "Ukupno"]
+    headers = Enum.reduce(races, headers, fn race, acc -> acc ++ [race.name] end)
+
+    {_, _, rows} =
+      Enum.reduce(results, {1, nil, []}, fn %{
+                                              runner: runner,
+                                              total_points: total_points,
+                                              per_race: per_race
+                                            },
+                                            {position, last_points, rows} ->
+        printed_position = if total_points == last_points, do: "", else: position
+        last_points = if total_points == last_points, do: last_points, else: total_points
+
+        row =
+          [
+            printed_position,
+            runner.first_name,
+            runner.last_name,
+            to_string(runner.birth_year),
+            runner.country || "",
+            total_points
+          ]
+
+        row =
+          Enum.reduce(races, row, fn race, acc ->
+            points = Map.get(per_race, race.id, "")
+            acc ++ [points]
+          end)
+
+        {position + 1, last_points, rows ++ [row]}
+      end)
+
+    %Sheet{name: sheet_name, rows: [headers | rows]}
   end
 end
