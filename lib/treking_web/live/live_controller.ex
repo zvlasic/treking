@@ -157,8 +157,9 @@ defmodule TrekingWeb.LiveController do
       end)
 
     {:ok, package} = XlsxReader.open(file)
-    [sheet_name] = XlsxReader.sheet_names(package)
-    {:ok, [col | rows]} = XlsxReader.sheet(package, sheet_name)
+    sheets = XlsxReader.sheet_names(package)
+    first_sheet = List.first(sheets)
+    {:ok, [col | rows]} = XlsxReader.sheet(package, first_sheet)
 
     column_size = Enum.count(col)
     all_column_options = Enum.map(-1..(column_size - 1), & &1)
