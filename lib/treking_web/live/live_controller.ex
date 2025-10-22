@@ -11,7 +11,7 @@ defmodule TrekingWeb.LiveController do
 
   @fin_markers ["FIN"]
   @dnf_markers ["DNF"]
-  @dns_markers ["DNS", "REG", "DSQ", "STA"]
+  @dns_markers ["DNS", "REG", "DSQ", "STA", "RFP"]
 
   def mount(_params, _session, socket) do
     socket = allow_upload(socket, :results, accept: ~w(.xls .xlsx), max_entries: 1)
