@@ -137,7 +137,7 @@ defmodule TrekingWeb.LiveController do
     do: {:noreply, put_flash(socket, :error, "Select a file!")}
 
   def handle_event("export", _, socket) do
-    Treking.create_all()
+    Treking.create_all_sheets()
     {:noreply, socket}
   end
 

@@ -8,7 +8,7 @@ defmodule Treking do
   @dnf_points 1
   @break_off_points 5
 
-  def create_all do
+  def create_all_sheets do
     sheets =
       Enum.map(
         [
@@ -27,7 +27,7 @@ defmodule Treking do
     Elixlsx.write_to(workbook, "results.xlsx")
   end
 
-  def calculate_points(category, gender) do
+  defp calculate_points(category, gender) do
     category =
       case category do
         :challenger -> [:challenger, :ultra, :marathon]
@@ -53,7 +53,7 @@ defmodule Treking do
     |> Enum.sort(&(&1.total_points > &2.total_points))
   end
 
-  def create_sheet(sheet_name, results) do
+  defp create_sheet(sheet_name, results) do
     races = get_races()
 
     headers = ["#", "Ime", "Prezime", "Godina", "Država", "Ukupno"]
