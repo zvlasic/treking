@@ -410,7 +410,5 @@ defmodule TrekingWeb.LiveController do
   defp extract_dnf(value) when value in @fin_markers, do: {:ok, false}
   defp extract_dnf(value) when value in @dnf_markers, do: {:ok, true}
   defp extract_dnf(value) when value in @dns_markers, do: {:error, :ignore}
-  # TBD - if no time count as dnf, but maybe should be ignored
-  defp extract_dnf(value) when value == "", do: {:ok, true}
   defp extract_dnf(value), do: {:error, "#{value} not in dnf markers"}
 end
