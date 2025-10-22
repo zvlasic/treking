@@ -293,8 +293,12 @@ defmodule TrekingWeb.LiveController do
   defp parse_birth_year(_, "NO_YEAR"), do: {:ok, nil}
 
   defp parse_birth_year(row, column) when is_integer(column) do
-    with {:ok, value} <- get_column_value(row, column),
-         do: parse_integer(value)
+    with {:ok, value} <- get_column_value(row, column) do
+      case value do
+        "0" -> {:ok, nil}
+        _ -> parse_integer(value)
+      end
+    end
   end
 
   defp parse_birth_year(_, _), do: {:error, "Invalid column value for birth year"}
