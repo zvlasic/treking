@@ -3,8 +3,8 @@ defmodule TrekingWeb.LiveController do
 
   alias Treking.Schemas.Result
 
-  @male_markers ["Muški", "M", "1-Male"]
-  @female_markers ["Ženski", "Ž", "F", "2-Female"]
+  @male_markers ["Muški", "M", "1-Male", "m"]
+  @female_markers ["Ženski", "Ž", "F", "2-Female", "f"]
 
   @fin_markers ["FIN"]
   @dnf_markers ["DNF"]
