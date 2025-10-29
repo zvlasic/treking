@@ -291,9 +291,10 @@ defmodule TrekingWeb.LiveController do
 
   defp parse_birth_year(row, column) when is_integer(column) do
     with {:ok, value} <- get_column_value(row, column) do
-      case value do
-        "0" -> {:ok, nil}
-        _ -> parse_integer(value)
+      cond do
+        is_struct(value, Date) -> {:ok, value.year}
+        "0" == value -> {:ok, nil}
+        true -> parse_integer(value)
       end
     end
   end
