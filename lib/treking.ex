@@ -268,7 +268,15 @@ defmodule Treking do
           "HAI-Haiti" => "HAITI",
           "CAF-Central African Republic" => "CENTRAL AFRICAN REPUBLIC",
           "PER-Peru" => "PERU",
-          "BRN-Bahrain" => "BAHREIN"
+          "BRN-Bahrain" => "BAHREIN",
+          "RSA" => "JUŽNOAFRIČKA REPUBLIKA",
+          "COL" => "KOLUMBIJA",
+          "UKR" => "UKRAJINA",
+          "ISV" => "DJEVIČANSKI OTOCI SAD",
+          "KOR" => "JUŽNA KOREJA",
+          "SUI" => "ŠVICARSKA",
+          "VEN" => "VENECUELA",
+          "BLR" => "BJELORUSIJA"
         },
         input
       )
