@@ -321,9 +321,12 @@ defmodule TrekingWeb.LiveController do
   defp parse_country(_, "NO_COUNTRY"), do: {:ok, nil}
 
   defp parse_country(row, column) when is_integer(column) do
-    with {:ok, value} <- get_column_value(row, column),
-         :ok <- check_empty(value),
-         do: Treking.fetch_country(value)
+    with {:ok, value} <- get_column_value(row, column) do
+      case value do
+        "" -> {:ok, nil}
+        value -> Treking.fetch_country(value)
+      end
+    end
   end
 
   defp parse_country(_, _), do: {:error, "Invalid column value for country"}
