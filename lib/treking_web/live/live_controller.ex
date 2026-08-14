@@ -149,6 +149,7 @@ defmodule TrekingWeb.LiveController do
             "#{entry.uuid}-#{entry.client_name}"
           ])
 
+        File.mkdir_p!(Path.dirname(dest))
         File.cp!(path, dest)
         {:ok, static_path(socket, dest)}
       end)
@@ -261,7 +262,12 @@ defmodule TrekingWeb.LiveController do
     do: {:noreply, put_flash(socket, :error, "Missing params")}
 
   defp check_empty_row([]), do: {:error, :ignore}
-  defp check_empty_row(_), do: :ok
+
+  defp check_empty_row(row) do
+    if Enum.all?(row, &(&1 == "")),
+      do: {:error, :ignore},
+      else: :ok
+  end
 
   defp parse_column_value(column) do
     case Integer.parse(column) do
